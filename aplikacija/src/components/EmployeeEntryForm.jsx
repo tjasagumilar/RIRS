@@ -7,7 +7,6 @@ import {
   Box,
   MenuItem,
   FormControl,
-  InputLabel,
 } from "@mui/material";
 import axios from "axios";
 
@@ -23,8 +22,21 @@ const EmployeeEntryForm = () => {
 
   useEffect(() => {
     const fetchEmployees = async () => {
-      const response = await axios.get("http://localhost:5000/api/employees");
-      setEmployees(response.data);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/api/employees", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setEmployees(response.data);
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          alert("Unauthorized. Please log in again.");
+          localStorage.removeItem("token");
+          window.location.reload();
+        } else {
+          console.error("Error fetching employees:", error);
+        }
+      }
     };
 
     fetchEmployees();
@@ -41,7 +53,10 @@ const EmployeeEntryForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/entries", formData);
+      const token = localStorage.getItem("token");
+      await axios.post("http://localhost:5000/api/entries", formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       alert("Data submitted successfully");
       setFormData({
         employeeId: "",
@@ -50,8 +65,14 @@ const EmployeeEntryForm = () => {
         description: "",
       });
     } catch (error) {
-      console.error("Error submitting data", error);
-      alert("Error submitting data");
+      if (error.response && error.response.status === 401) {
+        alert("Unauthorized. Please log in again.");
+        localStorage.removeItem("token");
+        window.location.reload();
+      } else {
+        console.error("Error submitting data:", error);
+        alert("Error submitting data");
+      }
     }
   };
 
@@ -63,7 +84,6 @@ const EmployeeEntryForm = () => {
         </Typography>
         <form onSubmit={handleSubmit}>
           <FormControl fullWidth margin="normal" variant="outlined">
-            <InputLabel>Izberite zaposlenega</InputLabel>
             <TextField
               select
               name="employeeId"
@@ -71,6 +91,9 @@ const EmployeeEntryForm = () => {
               onChange={handleChange}
               label="Izberite zaposlenega"
               required
+              InputLabelProps={{
+                shrink: true, // Ensures the label stays shrunk when a value is selected
+              }}
             >
               {employees.map((employee) => (
                 <MenuItem key={employee.id} value={employee.id}>

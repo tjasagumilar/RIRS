@@ -1,23 +1,15 @@
 const express = require("express");
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
-const cors = require("cors"); // Import the CORS middleware
-const bcrypt = require('bcrypt');
+const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-// Load environment variables from .env file
-dotenv.config({ path: "../.env" }); // Adjust path if necessary
-
-// Initialize Express app
+dotenv.config({ path: "../.env" });
 const app = express();
 const port = 5000;
-
-// Enable CORS for all routes
 app.use(cors());
-
-// Middleware to parse JSON requests
 app.use(express.json());
-
-// Create MySQL connection using environment variables
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -35,101 +27,160 @@ db.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
-// Test route to check if the server and database are connected
-app.get("/api/employees", (req, res) => {
-  console.log("Fetching employees from the database...");
-  const query = "SELECT * FROM employees";
-  
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Authenticate token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Access token required" });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      console.error("Token validation error:", err);
+      return res.status(403).json({ message: "Invalid or expired token" });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Login endpoint
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  const query = "SELECT * FROM employees WHERE username = ?";
+  db.query(query, [username], async (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ success: false, message: "Invalid credentials" });
+    }
+
+    const user = results[0];
+    const match = await bcrypt.compare(password, user.password);
+
+    if (match) {
+      const token = jwt.sign(
+        {
+          sub: user.id,
+          name: user.name,
+          role: user.isBoss ? "admin" : "employee",
+          iat: Math.floor(Date.now() / 1000),
+        },
+        JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+
+      return res.json({
+        success: true,
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          role: user.isBoss ? "admin" : "employee",
+        },
+      });
+    } else {
+      return res.status(401).json({ success: false, message: "Invalid credentials" });
+    }
+  });
+});
+
+// Verify token endpoint
+app.get("/api/verify-token", authenticateToken, (req, res) => {
+  res.json({
+    message: "Token is valid",
+    userId: req.user.sub,
+    name: req.user.name,
+    role: req.user.role,
+  });
+});
+
+// Fetch all employees
+app.get("/api/employees", authenticateToken, (req, res) => {
+  const query = "SELECT id, name, username FROM employees";
   db.query(query, (err, results) => {
     if (err) {
       console.error("Failed to fetch employees:", err);
       return res.status(500).json({ error: "Failed to fetch employees" });
     }
-    console.log("Employees fetched successfully:", results);
     res.json(results);
   });
 });
 
-// Login route
-app.post("/api/login", async (req, res) => {
-  const { username, password } = req.body; // Correctly destructuring username and password
-  console.log("Login attempt:", { username }); // Logging the username correctly
+// Fetch work entries for an employee
+app.get("/api/entries", authenticateToken, (req, res) => {
+  const employeeId = req.query.employeeId;
 
-  // Fetch the user by username
-  const query = "SELECT * FROM employees WHERE username = ?";
-  db.query(query, [username], async (err, results) => {
-      if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({ error: "Database error" });
-      }
-      if (results.length === 0) {
-          console.warn("Invalid credentials: User not found");
-          return res.status(401).json({ success: false, message: "Invalid credentials" });
-      }
+  if (!employeeId) {
+    return res.status(400).json({ message: "Employee ID is required" });
+  }
 
-      const user = results[0];
-      console.log("Fetched user:", user);
-
-      // Compare the entered password with the hashed password in the database
-      const match = await bcrypt.compare(password, user.password);
-      
-      if (match) {
-          console.log("Login successful for user:", user.username);
-          return res.json({ success: true, user }); // Return the user object correctly
-      } else {
-          console.warn("Invalid credentials: Incorrect password");
-          return res.status(401).json({ success: false, message: "Invalid credentials" });
-      }
-  });
-});
-
-
-
-
-
-// Get work entries for a specific employee
-app.get("/api/entries", (req, res) => {
-  const employeeId = req.query.employeeId; // Get employeeId from query parameters
-  console.log("Fetching entries for employee ID:", employeeId);
   const query = "SELECT * FROM work_entries WHERE employee_id = ?";
-  
   db.query(query, [employeeId], (err, results) => {
     if (err) {
       console.error("Failed to fetch entries:", err);
       return res.status(500).json({ error: "Failed to fetch entries" });
     }
-    console.log("Fetched entries:", results);
-    res.json(results); // Return the array of entries
+    res.json(results);
   });
 });
 
-// Update a specific work entry by ID
-app.put("/api/entries/:id", (req, res) => {
+// Insert a new work entry
+app.post("/api/entries", authenticateToken, (req, res) => {
+  const { employeeId, hoursWorked, date, description } = req.body;
+
+  if (!employeeId || !hoursWorked || !date || !description) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const query = "INSERT INTO work_entries (employee_id, hours_worked, date, description) VALUES (?, ?, ?, ?)";
+  db.query(query, [employeeId, hoursWorked, date, description], (err, result) => {
+    if (err) {
+      console.error("Failed to insert entry:", err);
+      return res.status(500).json({ error: "Failed to insert entry" });
+    }
+    res.status(201).json({ message: "Entry created successfully" });
+  });
+});
+
+// Update a work entry
+app.put("/api/entries/:id", authenticateToken, (req, res) => {
   const id = req.params.id;
   const { hoursWorked, date, description } = req.body;
 
-  console.log(`Updating entry with ID: ${id}`, { hoursWorked, date, description });
+  if (!hoursWorked || !date || !description) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
 
   const query = "UPDATE work_entries SET hours_worked = ?, date = ?, description = ? WHERE id = ?";
-  
   db.query(query, [hoursWorked, date, description, id], (err, result) => {
-      if (err) {
-          console.error("Failed to update data:", err);
-          return res.status(500).json({ error: "Failed to update data" });
-      }
-      console.log("Data updated successfully for ID:", id);
-      res.status(200).json({ message: "Data updated successfully" });
+    if (err) {
+      console.error("Failed to update entry:", err);
+      return res.status(500).json({ error: "Failed to update entry" });
+    }
+    res.status(200).json({ message: "Entry updated successfully" });
   });
 });
 
-app.get("/api/entries/month", (req, res) => {
+// Fetch total work hours for a specific month
+app.get("/api/entries/month", authenticateToken, (req, res) => {
   const { employeeId, month } = req.query;
-  console.log("Fetching total hours for month:", month, "and employee ID:", employeeId);
 
-  // Modify the query to select all employee data and the total worked hours
+  if (!month) {
+    return res.status(400).json({ message: "Month is required" });
+  }
+
   let query = `
     SELECT 
-      employees.*,  -- Select all columns from the employees table
+      employees.name,
       SUM(work_entries.hours_worked) AS total_hours
     FROM 
       work_entries
@@ -140,28 +191,24 @@ app.get("/api/entries/month", (req, res) => {
   `;
   const queryParams = [month];
 
-  // Check if employeeId is provided, and if so, add it to the query
   if (employeeId) {
     query += " AND employee_id = ?";
     queryParams.push(employeeId);
   }
 
-  query += " GROUP BY work_entries.employee_id";  // Ensure the query groups by employee_id
+  query += " GROUP BY employees.id";
 
   db.query(query, queryParams, (err, results) => {
     if (err) {
-      console.error("Failed to fetch entries:", err);
-      return res.status(500).json({ error: "Failed to fetch entries" });
+      console.error("Failed to fetch total hours:", err);
+      return res.status(500).json({ error: "Failed to fetch total hours" });
     }
 
-    // If results are empty, send a message indicating no data found
     if (results.length === 0) {
-      return res.status(404).json({ message: "No entries found for the given criteria" });
+      return res.status(404).json({ message: "No data found" });
     }
 
-    // The result now includes all columns from employees and total worked hours
-    console.log("Results:", results);
-    res.json(results);  // Send the full results with employee data and total hours
+    res.json(results);
   });
 });
 

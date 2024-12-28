@@ -24,23 +24,31 @@ const Overview = () => {
       const fetchTotalHours = async () => {
         setLoading(true);
         try {
+          const token = localStorage.getItem("token");
           const response = await axios.get(
-            `http://localhost:5000/api/entries/month?month=${selectedMonth}`
+            `http://localhost:5000/api/entries/month?month=${selectedMonth}`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           setEmployeeHours(response.data);
           setFilteredEmployeeHours(response.data);
-          setError('');
+          setError("");
         } catch (err) {
-          setError('Napaka pri iskanju ur za ta mesec');
-          console.error(err);
+          if (err.response && err.response.status === 401) {
+            alert("Unauthorized. Please log in again.");
+            localStorage.removeItem("token");
+            window.location.reload();
+          } else {
+            setError("Napaka pri iskanju ur za ta mesec");
+            console.error(err);
+          }
         } finally {
           setLoading(false);
         }
       };
-
+  
       fetchTotalHours();
     }
-  }, [selectedMonth]);
+  }, [selectedMonth]);  
 
   useEffect(() => {
     const filtered = employeeHours.filter((entry) =>

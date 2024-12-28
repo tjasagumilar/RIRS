@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { TextField, Button, Box, Typography, Paper } from "@mui/material";
 import axios from "axios";
 
-
 const LoginForm = ({ onLogin }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -14,14 +13,29 @@ const LoginForm = ({ onLogin }) => {
         username,
         password,
       });
+
+      // Log the full API response for debugging
+      console.log("Login response:", response.data);
+
       if (response.data.success) {
-        onLogin(response.data.user);
+        const { token, user } = response.data;
+
+        // Ensure token and user object exist
+        if (!token || !user) {
+          throw new Error("Invalid response from server");
+        }
+
+        // Save token to localStorage
+        localStorage.setItem("token", token);
+
+        // Pass user object to onLogin
+        onLogin(user);
       } else {
         alert("Invalid credentials");
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("Login failed");
+      alert("Login failed. Please try again.");
     }
   };
 
@@ -42,7 +56,7 @@ const LoginForm = ({ onLogin }) => {
         <Typography variant="h6" gutterBottom>
           Še niste registrirani?
         </Typography>
-        <Button type="submit" variant="outlined" color="primary" >
+        <Button type="submit" variant="outlined" color="primary">
           Registracija
         </Button>
       </Box>
@@ -63,7 +77,7 @@ const LoginForm = ({ onLogin }) => {
             width: "100%",
             maxWidth: "400px",
             backgroundColor: "white",
-            borderRadius:"17px"
+            borderRadius: "17px",
           }}
           elevation={3}
         >
@@ -77,6 +91,7 @@ const LoginForm = ({ onLogin }) => {
               onChange={(e) => setUsername(e.target.value)}
               fullWidth
               margin="normal"
+              required
             />
             <TextField
               label="Password"
@@ -85,6 +100,7 @@ const LoginForm = ({ onLogin }) => {
               onChange={(e) => setPassword(e.target.value)}
               fullWidth
               margin="normal"
+              required
             />
             <Button type="submit" variant="contained" color="primary" fullWidth>
               Login
