@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 import Header from "./components/Header";
 import EmployeeEntryForm from "./components/EmployeeEntryForm";
 import EditEntryForm from "./components/EditEntryForm";
@@ -26,22 +32,23 @@ const App = () => {
       }
 
       try {
+        // Decode the token and check its type
         const decodedToken = decodeJwt(token);
         const now = Date.now() / 1000;
 
-        if (decodedToken.exp < now) {
+        if (decodedToken.exp && decodedToken.exp < now) {
           console.log("Token expired");
           localStorage.removeItem("token");
           setIsAuthenticated(false);
           return;
         }
 
-        // Assume successful verification
+        // Assume valid if no expiration is provided (Okta tokens)
         setIsAuthenticated(true);
         setUser({
-          id: decodedToken.uid?.toString() || decodedToken.sub?.toString(), // Convert to string
+          id: decodedToken.uid || decodedToken.sub, // UID for old login, SUB for SSO
           name: decodedToken.name || decodedToken.sub,
-          role: decodedToken.role || "employee", // Default to "employee" if role is not provided
+          role: decodedToken.role || "employee", // Default to "employee"
         });
       } catch (error) {
         console.error("Token verification failed:", error);
@@ -83,7 +90,14 @@ const App = () => {
   );
 };
 
-const AppContent = ({ isAuthenticated, user, selectedEntry, handleLogin, handleLogout, handleEdit }) => {
+const AppContent = ({
+  isAuthenticated,
+  user,
+  selectedEntry,
+  handleLogin,
+  handleLogout,
+  handleEdit,
+}) => {
   const navigate = useNavigate();
 
   const handleNavigate = (view) => {
@@ -110,7 +124,10 @@ const AppContent = ({ isAuthenticated, user, selectedEntry, handleLogin, handleL
             )
           }
         />
-        <Route path="/callback" element={<CallbackHandler onLogin={handleLogin} />} />
+        <Route
+          path="/callback"
+          element={<CallbackHandler onLogin={handleLogin} />}
+        />
         {isAuthenticated ? (
           <>
             <Route path="/vnesiUre" element={<EmployeeEntryForm />} />
@@ -121,16 +138,20 @@ const AppContent = ({ isAuthenticated, user, selectedEntry, handleLogin, handleL
                   employeeId={user?.id}
                   onEdit={(entry) => {
                     handleEdit(entry);
-                    navigate("/editEntry"); // Navigate to the EditEntryForm page
+                    navigate("/editEntry");
                   }}
                 />
               }
             />
+
             <Route
               path="/editEntry"
               element={<EditEntryForm entry={selectedEntry} />}
             />
-            <Route path="/pregled" element={<Overview employeeId={user?.id} />} />
+            <Route
+              path="/pregled"
+              element={<Overview employeeId={user?.id} />}
+            />
           </>
         ) : (
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -139,6 +160,5 @@ const AppContent = ({ isAuthenticated, user, selectedEntry, handleLogin, handleL
     </>
   );
 };
-
 
 export default App;

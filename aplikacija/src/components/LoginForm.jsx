@@ -11,7 +11,7 @@ const LoginForm = () => {
     console.log("Redirecting to Okta for login...");
     window.location.href = "http://localhost:5000/api/auth";
   };
-
+  
   const handleOldLogin = async () => {
     try {
       const response = await axios.post("http://localhost:5000/api/login", {
@@ -19,7 +19,7 @@ const LoginForm = () => {
         password,
       });
       const { token, user } = response.data;
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", token); // Store token for old login
       localStorage.setItem("user", JSON.stringify(user));
       console.log("Old login successful:", user);
       window.location.href = "/vnesiUre"; // Redirect to dashboard
@@ -28,6 +28,7 @@ const LoginForm = () => {
       alert("Invalid credentials. Please try again.");
     }
   };
+  
 
   return (
     <Box

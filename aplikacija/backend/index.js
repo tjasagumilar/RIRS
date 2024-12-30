@@ -7,6 +7,7 @@ const axios = require("axios");
 const qs = require("querystring");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const jwksClient = require("jwks-rsa");
 
 // Load environment variables
 dotenv.config({ path: "../.env" });
@@ -36,8 +37,76 @@ db.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
-// Redirect URI for Okta
-const REDIRECT_URI = "http://localhost:5173/callback";
+// JWKS client for Okta token verification
+const jwks = jwksClient({
+  jwksUri: `https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/keys`,
+});
+
+const getKey = (header, callback) => {
+  jwks.getSigningKey(header.kid, (err, key) => {
+    if (err) {
+      console.error("Error fetching signing key:", err.message);
+      callback(err, null);
+    } else {
+      const signingKey = key.getPublicKey();
+      callback(null, signingKey);
+    }
+  });
+};
+
+// Middleware: Authenticate Token
+const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1]; // Extract token
+
+  if (!token) {
+    return res.status(401).json({ message: "Access token required" });
+  }
+
+  try {
+    const decodedHeader = jwt.decode(token, { complete: true });
+    if (!decodedHeader || !decodedHeader.header.alg) {
+      throw new Error("Invalid token header");
+    }
+
+    if (decodedHeader.header.alg === "HS256") {
+      // Old login tokens
+      jwt.verify(
+        token,
+        process.env.JWT_SECRET,
+        { algorithms: ["HS256"] },
+        (err, user) => {
+          if (err) {
+            console.error("Old login token validation failed:", err.message);
+            throw new Error("Invalid old login token");
+          }
+          req.user = user;
+          next();
+        }
+      );
+    } else if (decodedHeader.header.alg === "RS256") {
+      // Okta tokens
+      jwt.verify(
+        token,
+        getKey,
+        { algorithms: ["RS256"] },
+        (err, user) => {
+          if (err) {
+            console.error("Okta token validation failed:", err.message);
+            throw new Error("Invalid Okta token");
+          }
+          req.user = user;
+          next();
+        }
+      );
+    } else {
+      throw new Error("Unsupported token algorithm");
+    }
+  } catch (error) {
+    console.error("Token validation error:", error.message);
+    return res.status(403).json({ message: "Invalid or expired token" });
+  }
+};
 
 // Route: Start Okta Authorization Code Flow
 app.get("/api/auth", (req, res) => {
@@ -46,7 +115,7 @@ app.get("/api/auth", (req, res) => {
       client_id: process.env.OKTA_CLIENT_ID,
       response_type: "code",
       scope: "openid profile",
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: "http://localhost:5173/callback",
       state: "some_state",
     });
   res.redirect(authUrl);
@@ -68,7 +137,7 @@ app.get("/api/callback", async (req, res) => {
         client_id: process.env.OKTA_CLIENT_ID,
         client_secret: process.env.OKTA_CLIENT_SECRET,
         code,
-        redirect_uri: process.env.REDIRECT_URI,
+        redirect_uri: "http://localhost:5173/callback",
       }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
@@ -86,25 +155,6 @@ app.get("/api/callback", async (req, res) => {
     res.status(500).json({ error: "Failed to exchange authorization code" });
   }
 });
-
-// Middleware: Authenticate Token
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({ message: "Access token required" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.error("Token validation error:", err);
-    return res.status(403).json({ message: "Invalid or expired token" });
-  }
-};
 
 // Route: Login for Old Authentication
 app.post("/api/login", async (req, res) => {
@@ -179,43 +229,6 @@ app.get("/api/entries", authenticateToken, (req, res) => {
   });
 });
 
-// Route: Insert a New Work Entry (Protected)
-app.post("/api/entries", authenticateToken, (req, res) => {
-  const { employeeId, hoursWorked, date, description } = req.body;
-
-  if (!employeeId || !hoursWorked || !date || !description) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
-  const query = "INSERT INTO work_entries (employee_id, hours_worked, date, description) VALUES (?, ?, ?, ?)";
-  db.query(query, [employeeId, hoursWorked, date, description], (err, result) => {
-    if (err) {
-      console.error("Failed to insert entry:", err);
-      return res.status(500).json({ error: "Failed to insert entry" });
-    }
-    res.status(201).json({ message: "Entry created successfully" });
-  });
-});
-
-// Route: Update a Work Entry (Protected)
-app.put("/api/entries/:id", authenticateToken, (req, res) => {
-  const id = req.params.id;
-  const { hoursWorked, date, description } = req.body;
-
-  if (!hoursWorked || !date || !description) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
-  const query = "UPDATE work_entries SET hours_worked = ?, date = ?, description = ? WHERE id = ?";
-  db.query(query, [hoursWorked, date, description, id], (err, result) => {
-    if (err) {
-      console.error("Failed to update entry:", err);
-      return res.status(500).json({ error: "Failed to update entry" });
-    }
-    res.status(200).json({ message: "Entry updated successfully" });
-  });
-});
-
 // Route: Fetch Total Work Hours for a Specific Month (Protected)
 app.get("/api/entries/month", authenticateToken, (req, res) => {
   const { employeeId, month } = req.query;
@@ -257,6 +270,7 @@ app.get("/api/entries/month", authenticateToken, (req, res) => {
     res.json(results);
   });
 });
+
 
 // Start the Server
 app.listen(port, () => {
