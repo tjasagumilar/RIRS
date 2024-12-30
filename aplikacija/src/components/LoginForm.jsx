@@ -1,15 +1,41 @@
 import React, { useState } from "react";
-import { Button, Box, Typography, Paper } from "@mui/material";
+import { Button, Box, Typography, Paper, TextField } from "@mui/material";
+import axios from "axios";
 
-const LoginForm = ({ onLogin }) => {
- const handleLoginRedirect = () => {
-  console.log("Redirecting to Okta for login...");
-  window.location.href = "http://localhost:5000/api/auth";
-};
+const LoginForm = () => {
+  const [isSSOLogin, setIsSSOLogin] = useState(true); // Toggle between SSO and old login
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
+  const handleLoginRedirect = () => {
+    console.log("Redirecting to Okta for login...");
+    window.location.href = "http://localhost:5000/api/auth";
+  };
+
+  const handleOldLogin = async () => {
+    try {
+      const response = await axios.post("http://localhost:5000/api/login", {
+        username,
+        password,
+      });
+      const { token, user } = response.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      console.log("Old login successful:", user);
+      window.location.href = "/vnesiUre"; // Redirect to dashboard
+    } catch (error) {
+      console.error("Old login failed:", error.response?.data || error.message);
+      alert("Invalid credentials. Please try again.");
+    }
+  };
 
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+      }}
+    >
       {/* Left Side */}
       <Box
         sx={{
@@ -51,16 +77,57 @@ const LoginForm = ({ onLogin }) => {
           elevation={3}
         >
           <Typography variant="h6" gutterBottom>
-            Login
+            {isSSOLogin ? "Login with Okta" : "Old Login"}
           </Typography>
+          {isSSOLogin ? (
+            <Button
+              type="button"
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={handleLoginRedirect}
+            >
+              Login Okta
+            </Button>
+          ) : (
+            <Box>
+              <TextField
+                label="Username"
+                fullWidth
+                margin="normal"
+                variant="outlined"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <TextField
+                label="Password"
+                type="password"
+                fullWidth
+                margin="normal"
+                variant="outlined"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={handleOldLogin}
+                sx={{ marginTop: 2 }}
+              >
+                Login
+              </Button>
+            </Box>
+          )}
           <Button
             type="button"
-            variant="contained"
-            color="primary"
+            variant="text"
             fullWidth
-            onClick={handleLoginRedirect}
+            onClick={() => setIsSSOLogin(!isSSOLogin)}
+            sx={{ marginTop: 2 }}
           >
-            Login with Okta
+            {isSSOLogin ? "Stara prijava" : "SSO Prijava"}
           </Button>
         </Paper>
       </Box>

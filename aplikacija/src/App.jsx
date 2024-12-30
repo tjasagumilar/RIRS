@@ -12,50 +12,57 @@ import { decodeJwt } from "jose";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [employeeId, setEmployeeId] = useState(null);
-  const [userName, setUserName] = useState(null);
+  const [user, setUser] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState(null);
 
+  // Verify token on app load
   useEffect(() => {
     const verifyToken = async () => {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         setIsAuthenticated(false);
         return;
       }
-  
+
       try {
         const decodedToken = decodeJwt(token);
         const now = Date.now() / 1000;
-  
+
         if (decodedToken.exp < now) {
           console.log("Token expired");
           localStorage.removeItem("token");
           setIsAuthenticated(false);
           return;
         }
-  
-        // Assume verification is successful without redundant API calls
+
+        // Assume successful verification
         setIsAuthenticated(true);
-        setEmployeeId(decodedToken.uid);
-        setUserName(decodedToken.sub);
+        setUser({
+          id: decodedToken.uid?.toString() || decodedToken.sub?.toString(), // Convert to string
+          name: decodedToken.name || decodedToken.sub,
+          role: decodedToken.role || "employee", // Default to "employee" if role is not provided
+        });
       } catch (error) {
         console.error("Token verification failed:", error);
         localStorage.removeItem("token");
         setIsAuthenticated(false);
       }
     };
-  
+
     verifyToken();
   }, []);
 
+  const handleLogin = (loggedInUser) => {
+    setUser(loggedInUser);
+    setIsAuthenticated(true);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
     setIsAuthenticated(false);
-    setEmployeeId(null);
-    setUserName(null);
   };
 
   const handleEdit = (entry) => {
@@ -66,9 +73,9 @@ const App = () => {
     <Router>
       <AppContent
         isAuthenticated={isAuthenticated}
-        userName={userName}
-        employeeId={employeeId}
+        user={user}
         selectedEntry={selectedEntry}
+        handleLogin={handleLogin}
         handleLogout={handleLogout}
         handleEdit={handleEdit}
       />
@@ -76,7 +83,7 @@ const App = () => {
   );
 };
 
-const AppContent = ({ isAuthenticated, userName, employeeId, selectedEntry, handleLogout, handleEdit }) => {
+const AppContent = ({ isAuthenticated, user, selectedEntry, handleLogin, handleLogout, handleEdit }) => {
   const navigate = useNavigate();
 
   const handleNavigate = (view) => {
@@ -85,22 +92,45 @@ const AppContent = ({ isAuthenticated, userName, employeeId, selectedEntry, hand
 
   return (
     <>
-      {isAuthenticated && <Header userName={userName} onNavigate={handleNavigate} onLogout={handleLogout} />}
+      {isAuthenticated && (
+        <Header
+          userName={user?.name || "User"}
+          onNavigate={handleNavigate}
+          onLogout={handleLogout}
+        />
+      )}
       <Routes>
-        <Route path="/" element={isAuthenticated ? <Navigate to="/vnesiUre" replace /> : <LoginForm />} />
-        <Route path="/callback" element={<CallbackHandler />} />
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/vnesiUre" replace />
+            ) : (
+              <LoginForm onLogin={handleLogin} />
+            )
+          }
+        />
+        <Route path="/callback" element={<CallbackHandler onLogin={handleLogin} />} />
         {isAuthenticated ? (
           <>
             <Route path="/vnesiUre" element={<EmployeeEntryForm />} />
             <Route
               path="/mojaEvidenca"
-              element={<EmployeeHoursTable employeeId={employeeId} onEdit={handleEdit} />}
+              element={
+                <EmployeeHoursTable
+                  employeeId={user?.id}
+                  onEdit={(entry) => {
+                    handleEdit(entry);
+                    navigate("/editEntry"); // Navigate to the EditEntryForm page
+                  }}
+                />
+              }
             />
-            <Route path="/pregled" element={<Overview employeeId={employeeId} />} />
             <Route
               path="/editEntry"
-              element={<EditEntryForm entry={selectedEntry || {}} />}
+              element={<EditEntryForm entry={selectedEntry} />}
             />
+            <Route path="/pregled" element={<Overview employeeId={user?.id} />} />
           </>
         ) : (
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -109,5 +139,6 @@ const AppContent = ({ isAuthenticated, userName, employeeId, selectedEntry, hand
     </>
   );
 };
+
 
 export default App;

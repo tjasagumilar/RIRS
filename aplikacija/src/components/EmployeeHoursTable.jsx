@@ -57,15 +57,9 @@ const EmployeeHoursTable = ({ employeeId, onEdit }) => {
     }
   }, [employeeId]);
 
-  const { toPDF, targetRef } = usePDF({ filename: "employee_hours.pdf" });
-
-  const handlePDFDownload = async () => {
-    try {
-      await toPDF();
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Napaka pri ustvarjanju PDF-ja.");
-    }
+  const handleEditClick = (entry) => {
+    console.log("Editing entry:", entry); // Log the entry being edited
+    onEdit(entry); // Call the onEdit function passed from the parent
   };
 
   return (
@@ -79,7 +73,7 @@ const EmployeeHoursTable = ({ employeeId, onEdit }) => {
           <Button
             variant="contained"
             color="primary"
-            onClick={handlePDFDownload}
+            onClick={() => alert("PDF download feature not implemented yet")}
             style={{ height: "55px" }}
           >
             <DownloadIcon />
@@ -87,22 +81,14 @@ const EmployeeHoursTable = ({ employeeId, onEdit }) => {
         </Grid>
       </Grid>
 
-      <TableContainer component={Paper} style={{ marginTop: "20px" }} ref={targetRef}>
+      <TableContainer component={Paper} style={{ marginTop: "20px" }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>
-                <strong>Datum</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Oddelane ure</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Opombe</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Uredi</strong>
-              </TableCell>
+              <TableCell><strong>Datum</strong></TableCell>
+              <TableCell><strong>Oddelane ure</strong></TableCell>
+              <TableCell><strong>Opombe</strong></TableCell>
+              <TableCell><strong>Uredi</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -121,7 +107,10 @@ const EmployeeHoursTable = ({ employeeId, onEdit }) => {
                   <TableCell>{entry.hours_worked}</TableCell>
                   <TableCell>{entry.description}</TableCell>
                   <TableCell>
-                    <IconButton onClick={() => onEdit(entry)} color="primary">
+                    <IconButton
+                      onClick={() => handleEditClick(entry)}
+                      color="primary"
+                    >
                       <EditIcon />
                     </IconButton>
                   </TableCell>
@@ -136,8 +125,9 @@ const EmployeeHoursTable = ({ employeeId, onEdit }) => {
 };
 
 EmployeeHoursTable.propTypes = {
-  employeeId: PropTypes.string.isRequired,
+  employeeId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   onEdit: PropTypes.func.isRequired,
 };
+
 
 export default EmployeeHoursTable;

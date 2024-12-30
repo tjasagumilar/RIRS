@@ -22,28 +22,16 @@ const EditEntryForm = ({ entry, onSave }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log("Editing entry:", entry); // Confirm entry data
     if (entry) {
       setFormData({
         hoursWorked: entry.hours_worked || "",
         date: entry.date ? formatDate(entry.date) : "",
         description: entry.description || "",
       });
-    } else {
-      setFormData({
-        hoursWorked: "",
-        date: "",
-        description: "",
-      });
     }
   }, [entry]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,7 +46,7 @@ const EditEntryForm = ({ entry, onSave }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Entry updated successfully");
-      if (onSave) onSave();
+      if (onSave) onSave(); // Trigger onSave after a successful save
     } catch (error) {
       console.error("Error updating entry:", error);
       alert("Failed to update entry");
@@ -78,7 +66,9 @@ const EditEntryForm = ({ entry, onSave }) => {
             label="Oddelane ure"
             name="hoursWorked"
             value={formData.hoursWorked}
-            onChange={handleChange}
+            onChange={(e) =>
+              setFormData({ ...formData, hoursWorked: e.target.value })
+            }
             fullWidth
             margin="normal"
             variant="outlined"
@@ -89,7 +79,9 @@ const EditEntryForm = ({ entry, onSave }) => {
             label="Datum"
             name="date"
             value={formData.date}
-            onChange={handleChange}
+            onChange={(e) =>
+              setFormData({ ...formData, date: e.target.value })
+            }
             fullWidth
             margin="normal"
             variant="outlined"
@@ -101,7 +93,9 @@ const EditEntryForm = ({ entry, onSave }) => {
             label="Opombe"
             name="description"
             value={formData.description}
-            onChange={handleChange}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             fullWidth
             margin="normal"
             variant="outlined"
