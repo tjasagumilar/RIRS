@@ -30,11 +30,12 @@ const CallbackHandler = () => {
 
         // Save token and user info in localStorage
         localStorage.setItem("token", accessToken);
-        localStorage.setItem("user", JSON.stringify(user)); // Store user details
+        localStorage.setItem("user", JSON.stringify(user));
 
         console.log("User info received:", user);
 
         navigate("/vnesiUre", { replace: true });
+        window.location.reload();
       } catch (error) {
         console.error("Error exchanging authorization code:", error.response?.data || error.message);
         alert("Failed to log in. Please try again.");

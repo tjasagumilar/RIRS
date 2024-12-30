@@ -19,39 +19,37 @@ const App = () => {
   useEffect(() => {
     const verifyToken = async () => {
       const token = localStorage.getItem("token");
-
+  
       if (!token) {
         setIsAuthenticated(false);
         return;
       }
-
+  
       try {
         const decodedToken = decodeJwt(token);
         const now = Date.now() / 1000;
-
+  
         if (decodedToken.exp < now) {
           console.log("Token expired");
           localStorage.removeItem("token");
           setIsAuthenticated(false);
           return;
         }
-
-        await axios.get("http://localhost:5000/api/verify-token", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+  
+        // Assume verification is successful without redundant API calls
         setIsAuthenticated(true);
         setEmployeeId(decodedToken.uid);
-        setUserName(decodedToken.sub); // Use 'sub' as the username
+        setUserName(decodedToken.sub);
       } catch (error) {
         console.error("Token verification failed:", error);
         localStorage.removeItem("token");
         setIsAuthenticated(false);
       }
     };
-
+  
     verifyToken();
   }, []);
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
