@@ -1,21 +1,23 @@
-import React from 'react';
-import { AppBar, Toolbar, Button, Typography } from '@mui/material';
+import React from "react";
+import PropTypes from "prop-types";
+import { AppBar, Toolbar, Button, Typography } from "@mui/material";
 
-// eslint-disable-next-line react/prop-types
-const Header = ({ onNavigate, onLogout }) => {
+const Header = ({ onNavigate, onLogout, userName }) => {
   return (
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Evidenca ur
+          Evidenca ur za {userName || "Uporabnik"}!
         </Typography>
-        <Button color="inherit" onClick={() => onNavigate('vnesiUre')}>
+    
+        
+        <Button color="inherit" onClick={() => onNavigate("/vnesiUre")}>
           Vnesi ure
         </Button>
-        <Button color="inherit" onClick={() => onNavigate('mojaEvidenca')}>
+        <Button color="inherit" onClick={() => onNavigate("/mojaEvidenca")}>
           Moja evidenca
         </Button>
-        <Button color="inherit" onClick={() => onNavigate('pregled')}>
+        <Button color="inherit" onClick={() => onNavigate("/pregled")}>
           Pregled
         </Button>
         <Button color="inherit" onClick={onLogout}>
@@ -24,6 +26,12 @@ const Header = ({ onNavigate, onLogout }) => {
       </Toolbar>
     </AppBar>
   );
+};
+
+Header.propTypes = {
+  onNavigate: PropTypes.func.isRequired,
+  onLogout: PropTypes.func.isRequired,  
+  userName: PropTypes.string,          
 };
 
 export default Header;

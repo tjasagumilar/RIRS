@@ -3,9 +3,10 @@ import { TextField, Button, Container, Typography, Box } from "@mui/material";
 import axios from "axios";
 import PropTypes from "prop-types";
 
-// Helper function to convert date to YYYY-MM-DD format
 const formatDate = (dateString) => {
+  if (!dateString) return "";
   const date = new Date(dateString);
+  if (isNaN(date)) return "";
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -18,38 +19,39 @@ const EditEntryForm = ({ entry, onSave }) => {
     date: "",
     description: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  // Populate the form with the passed entry data
   useEffect(() => {
+    console.log("Editing entry:", entry); // Confirm entry data
     if (entry) {
       setFormData({
         hoursWorked: entry.hours_worked || "",
-        date: formatDate(entry.date) || "",
+        date: entry.date ? formatDate(entry.date) : "",
         description: entry.description || "",
       });
     }
   }, [entry]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!entry || !entry.id) {
+      alert("Invalid entry. Cannot update.");
+      return;
+    }
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
       await axios.put(`http://localhost:5000/api/entries/${entry.id}`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Entry updated successfully");
-      if (onSave) onSave(); // Notify the parent component
+      if (onSave) onSave(); // Trigger onSave after a successful save
     } catch (error) {
       console.error("Error updating entry:", error);
       alert("Failed to update entry");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,7 +66,9 @@ const EditEntryForm = ({ entry, onSave }) => {
             label="Oddelane ure"
             name="hoursWorked"
             value={formData.hoursWorked}
-            onChange={handleChange}
+            onChange={(e) =>
+              setFormData({ ...formData, hoursWorked: e.target.value })
+            }
             fullWidth
             margin="normal"
             variant="outlined"
@@ -75,7 +79,9 @@ const EditEntryForm = ({ entry, onSave }) => {
             label="Datum"
             name="date"
             value={formData.date}
-            onChange={handleChange}
+            onChange={(e) =>
+              setFormData({ ...formData, date: e.target.value })
+            }
             fullWidth
             margin="normal"
             variant="outlined"
@@ -87,7 +93,9 @@ const EditEntryForm = ({ entry, onSave }) => {
             label="Opombe"
             name="description"
             value={formData.description}
-            onChange={handleChange}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             fullWidth
             margin="normal"
             variant="outlined"
@@ -101,8 +109,9 @@ const EditEntryForm = ({ entry, onSave }) => {
             color="primary"
             fullWidth
             sx={{ mt: 2 }}
+            disabled={loading}
           >
-            Shrani
+            {loading ? "Shranjevanje..." : "Shrani"}
           </Button>
         </form>
       </Box>
@@ -111,8 +120,12 @@ const EditEntryForm = ({ entry, onSave }) => {
 };
 
 EditEntryForm.propTypes = {
-  entry: PropTypes.object.isRequired,
+  entry: PropTypes.object,
   onSave: PropTypes.func,
+};
+
+EditEntryForm.defaultProps = {
+  entry: null,
 };
 
 export default EditEntryForm;
