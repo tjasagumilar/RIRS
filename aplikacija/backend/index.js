@@ -2,14 +2,18 @@ const express = require("express");
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const axios = require("axios");
+const qs = require("querystring");
 
 dotenv.config({ path: "../.env" });
 const app = express();
 const port = 5000;
+
+// Middleware
 app.use(cors());
 app.use(express.json());
+
+// Set up the MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -27,83 +31,113 @@ db.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
-const JWT_SECRET = process.env.JWT_SECRET;
+// Redirect URI should match the Okta app configuration
+const REDIRECT_URI = "http://localhost:5173/callback"; // Adjust as necessary
 
-// Authenticate token
-const authenticateToken = (req, res, next) => {
+// Route to initiate the authorization code flow
+app.get("/api/auth", (req, res) => {
+  console.log("Redirecting to Okta authorization page...");
+  const authUrl = `https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/authorize?` +
+    qs.stringify({
+      client_id: process.env.OKTA_CLIENT_ID,
+      response_type: "code",
+      scope: "openid profile",
+      redirect_uri: REDIRECT_URI,
+      state: "some_state",
+    });
+  res.redirect(authUrl);
+});
+
+
+// Route to handle Okta's callback with authorization code
+app.get("/api/callback", async (req, res) => {
+  const { code } = req.query;
+
+  if (!code) {
+    return res.status(400).json({ error: "Authorization code missing" });
+  }
+
+  try {
+    const tokenResponse = await axios.post(
+      `https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/token`,
+      qs.stringify({
+        grant_type: "authorization_code",
+        client_id: process.env.OKTA_CLIENT_ID,
+        client_secret: process.env.OKTA_CLIENT_SECRET,
+        code,
+        redirect_uri: process.env.REDIRECT_URI,
+      }),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
+
+    const { access_token } = tokenResponse.data;
+
+    const userInfoResponse = await axios.get(
+      `https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/userinfo`,
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }
+    );
+
+    res.json({ accessToken: access_token, user: userInfoResponse.data });
+  } catch (error) {
+    console.error("Error exchanging authorization code:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to exchange authorization code" });
+  }
+});
+
+
+// Verify token endpoint
+app.get("/api/verify-token", (req, res) => {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const token = authHeader && authHeader.split(" ")[1]; // Extract the token
 
   if (!token) {
     return res.status(401).json({ message: "Access token required" });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
+  axios
+    .get(`https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/userinfo`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then((response) => {
+      res.status(200).json({ user: response.data });
+    })
+    .catch((err) => {
+      console.error("Token verification failed:", err.response?.data || err.message);
+      res.status(403).json({ message: "Invalid or expired token" });
+    });
+});
+
+
+// Middleware to authenticate token using Okta
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1]; // Extract token from header
+
+  if (!token) {
+    return res.status(401).json({ message: "Access token required" });
+  }
+
+  // Verify token using Okta JWT Verifier
+  axios.get(`https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/userinfo`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((response) => {
+      req.user = response.data; // Attach user claims to request object
+      next();
+    })
+    .catch((err) => {
       console.error("Token validation error:", err);
       return res.status(403).json({ message: "Invalid or expired token" });
-    }
-    req.user = user;
-    next();
-  });
+    });
 };
 
-// Login endpoint
-app.post("/api/login", async (req, res) => {
-  const { username, password } = req.body;
-
-  const query = "SELECT * FROM employees WHERE username = ?";
-  db.query(query, [username], async (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ error: "Database error" });
-    }
-
-    if (results.length === 0) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-    }
-
-    const user = results[0];
-    const match = await bcrypt.compare(password, user.password);
-
-    if (match) {
-      const token = jwt.sign(
-        {
-          sub: user.id,
-          name: user.name,
-          role: user.isBoss ? "admin" : "employee",
-          iat: Math.floor(Date.now() / 1000),
-        },
-        JWT_SECRET,
-        { expiresIn: "1d" }
-      );
-
-      return res.json({
-        success: true,
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          role: user.isBoss ? "admin" : "employee",
-        },
-      });
-    } else {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-    }
-  });
-});
-
-// Verify token endpoint
-app.get("/api/verify-token", authenticateToken, (req, res) => {
-  res.json({
-    message: "Token is valid",
-    userId: req.user.sub,
-    name: req.user.name,
-    role: req.user.role,
-  });
-});
-
-// Fetch all employees
+// Protected route to fetch all employees
 app.get("/api/employees", authenticateToken, (req, res) => {
   const query = "SELECT id, name, username FROM employees";
   db.query(query, (err, results) => {
@@ -115,7 +149,7 @@ app.get("/api/employees", authenticateToken, (req, res) => {
   });
 });
 
-// Fetch work entries for an employee
+// Fetch work entries for an employee (protected route)
 app.get("/api/entries", authenticateToken, (req, res) => {
   const employeeId = req.query.employeeId;
 
@@ -133,7 +167,7 @@ app.get("/api/entries", authenticateToken, (req, res) => {
   });
 });
 
-// Insert a new work entry
+// Insert a new work entry (protected route)
 app.post("/api/entries", authenticateToken, (req, res) => {
   const { employeeId, hoursWorked, date, description } = req.body;
 
@@ -151,7 +185,7 @@ app.post("/api/entries", authenticateToken, (req, res) => {
   });
 });
 
-// Update a work entry
+// Update a work entry (protected route)
 app.put("/api/entries/:id", authenticateToken, (req, res) => {
   const id = req.params.id;
   const { hoursWorked, date, description } = req.body;
@@ -170,7 +204,7 @@ app.put("/api/entries/:id", authenticateToken, (req, res) => {
   });
 });
 
-// Fetch total work hours for a specific month
+// Fetch total work hours for a specific month (protected route)
 app.get("/api/entries/month", authenticateToken, (req, res) => {
   const { employeeId, month } = req.query;
 

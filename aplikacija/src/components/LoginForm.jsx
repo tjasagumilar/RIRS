@@ -1,43 +1,12 @@
 import React, { useState } from "react";
-import { TextField, Button, Box, Typography, Paper } from "@mui/material";
-import axios from "axios";
+import { Button, Box, Typography, Paper } from "@mui/material";
 
 const LoginForm = ({ onLogin }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+ const handleLoginRedirect = () => {
+  console.log("Redirecting to Okta for login...");
+  window.location.href = "http://localhost:5000/api/auth";
+};
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post("http://localhost:5000/api/login", {
-        username,
-        password,
-      });
-
-      // Log the full API response for debugging
-      console.log("Login response:", response.data);
-
-      if (response.data.success) {
-        const { token, user } = response.data;
-
-        // Ensure token and user object exist
-        if (!token || !user) {
-          throw new Error("Invalid response from server");
-        }
-
-        // Save token to localStorage
-        localStorage.setItem("token", token);
-
-        // Pass user object to onLogin
-        onLogin(user);
-      } else {
-        alert("Invalid credentials");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      alert("Login failed. Please try again.");
-    }
-  };
 
   return (
     <Box sx={{ display: "flex", height: "100vh" }}>
@@ -84,28 +53,15 @@ const LoginForm = ({ onLogin }) => {
           <Typography variant="h6" gutterBottom>
             Login
           </Typography>
-          <form onSubmit={handleSubmit}>
-            <TextField
-              label="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              fullWidth
-              margin="normal"
-              required
-            />
-            <TextField
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              fullWidth
-              margin="normal"
-              required
-            />
-            <Button type="submit" variant="contained" color="primary" fullWidth>
-              Login
-            </Button>
-          </form>
+          <Button
+            type="button"
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleLoginRedirect}
+          >
+            Login with Okta
+          </Button>
         </Paper>
       </Box>
     </Box>
