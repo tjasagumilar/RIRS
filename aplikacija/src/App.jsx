@@ -9,6 +9,10 @@ import EmployeeManagement from "./components/EmployeeManagement";
 import Overview from "./components/Overview";
 import CallbackHandler from "./components/CallbackHandler";
 import Budgets from "./components/Budgets"; // Import Budgets
+import Dopust from "./components/Dopust";
+import DopustAdmin from "./components/DopustAdmin";
+import Prihod from "./components/Prihod";
+import axios from "axios";
 import { decodeJwt } from "jose";
 
 const App = () => {
