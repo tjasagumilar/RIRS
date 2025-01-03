@@ -24,6 +24,7 @@ const EmployeeHoursTable = ({ employeeId, onEdit }) => {
   const [entries, setEntries] = useState([]);
 
   useEffect(() => {
+    console.log(employeeId)
     const fetchEntries = async () => {
       const source = axios.CancelToken.source();
       try {

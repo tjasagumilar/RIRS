@@ -20,6 +20,12 @@ const Header = ({ onNavigate, onLogout, userName }) => {
         <Button color="inherit" onClick={() => onNavigate("/pregled")}>
           Pregled
         </Button>
+        <Button color="inherit" onClick={() => onNavigate("/dopust")}>
+          Dopust
+        </Button>
+        <Button color="inherit" onClick={() => onNavigate("/dopustAdmin")}>
+          DopustAdmin
+        </Button>
         <Button color="inherit" onClick={onLogout}>
           Odjava
         </Button>

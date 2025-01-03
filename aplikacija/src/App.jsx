@@ -13,6 +13,8 @@ import LoginForm from "./components/LoginForm";
 import EmployeeHoursTable from "./components/EmployeeHoursTable";
 import Overview from "./components/Overview";
 import CallbackHandler from "./components/CallbackHandler";
+import Dopust from "./components/Dopust";
+import DopustAdmin from "./components/DopustAdmin";
 import axios from "axios";
 import { decodeJwt } from "jose";
 
@@ -140,6 +142,23 @@ const AppContent = ({
                     handleEdit(entry);
                     navigate("/editEntry");
                   }}
+                />
+              }
+            />
+            <Route
+              path="/dopust"
+              element={
+                <Dopust
+                  employeeId={user?.id}
+                  
+                />
+              }
+            />
+            <Route
+              path="/dopustAdmin"
+              element={
+                <DopustAdmin
+                  
                 />
               }
             />
