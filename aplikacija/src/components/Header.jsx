@@ -26,6 +26,9 @@ const Header = ({ onNavigate, onLogout, userName }) => {
         <Button color="inherit" onClick={() => onNavigate("/dopustAdmin")}>
           DopustAdmin
         </Button>
+        <Button color="inherit" onClick={() => onNavigate("/prihod")}>
+          Prihod
+        </Button>
         <Button color="inherit" onClick={onLogout}>
           Odjava
         </Button>

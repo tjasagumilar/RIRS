@@ -15,6 +15,7 @@ import Overview from "./components/Overview";
 import CallbackHandler from "./components/CallbackHandler";
 import Dopust from "./components/Dopust";
 import DopustAdmin from "./components/DopustAdmin";
+import Prihod from "./components/Prihod";
 import axios from "axios";
 import { decodeJwt } from "jose";
 
@@ -149,6 +150,15 @@ const AppContent = ({
               path="/dopust"
               element={
                 <Dopust
+                  employeeId={user?.id}
+                  
+                />
+              }
+            />
+            <Route
+              path="/prihod"
+              element={
+                <Prihod
                   employeeId={user?.id}
                   
                 />
