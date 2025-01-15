@@ -12,7 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - budget-data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   budget-service:
     build:
