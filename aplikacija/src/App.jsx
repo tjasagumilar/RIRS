@@ -8,7 +8,6 @@ import EmployeeHoursTable from "./components/EmployeeHoursTable";
 import EmployeeManagement from "./components/EmployeeManagement";
 import Overview from "./components/Overview";
 import CallbackHandler from "./components/CallbackHandler";
-import Projects from "./components/Projects";
 import Budgets from "./components/Budgets"; // Import Budgets
 import Dopust from "./components/dopust/Dopust";
 import DopustAdmin from "./components/dopust/DopustAdmin";
@@ -87,27 +86,6 @@ const App = () => {
           path="/callback"
           element={<CallbackHandler onLogin={handleLogin} />}
         />
-
-        {isAuthenticated ? (
-          <>
-            <Route
-              path="/projects"
-              element={isAuthenticated ? <Projects /> : <Navigate to="/" replace />}
-            />
-            <Route path="/vnesiUre" element={<EmployeeEntryForm />} />
-            <Route
-              path="/mojaEvidenca"
-              element={
-                <EmployeeHoursTable
-                  employeeId={user?.id}
-                  onEdit={(entry) => {
-                    handleEdit(entry);
-                    navigate("/editEntry");
-                  }}
-                />
-              }
-            />
-
         {isAuthenticated && (
           <Route
             path="/*"

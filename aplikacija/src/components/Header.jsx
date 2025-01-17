@@ -17,13 +17,7 @@ const Header = ({ onLogout, userName }) => {
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Evidenca ur za {userName || "Uporabnik"}!
         </Typography>
-
-
-
-        <Button color="inherit" onClick={() => onNavigate("/vnesiUre")}>
-
         <Button color="inherit" component={Link} to="/vnesiUre">
-
           Vnesi ure
         </Button>
         <Button color="inherit" component={Link} to="/mojaEvidenca">
@@ -32,13 +26,6 @@ const Header = ({ onLogout, userName }) => {
         <Button color="inherit" component={Link} to="/pregled">
           Pregled
         </Button>
-
-        <Button color="inherit" onClick={() => onNavigate("/projects")}>
-          Projects
-        </Button>
-        <Button color="inherit" onClick={onLogout}>
-          Odjava
-
         <Button color="inherit" component={Link} to="/budgets">
           Budget
         </Button>
@@ -53,7 +40,6 @@ const Header = ({ onLogout, userName }) => {
         </Button>
         <Button color="inherit" component={Link} to="/prihod">
           Prihod
-
         </Button>
         <Button color="inherit" onClick={handleLogout} />       
       </Toolbar>
@@ -62,9 +48,6 @@ const Header = ({ onLogout, userName }) => {
 };
 
 Header.propTypes = {
-
-  onNavigate: PropTypes.func.isRequired,
-
   onLogout: PropTypes.func.isRequired,
   userName: PropTypes.string,
 };
