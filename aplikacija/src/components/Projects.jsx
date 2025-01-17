@@ -21,7 +21,6 @@ import axios from "axios";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 
-
 const Projects = () => {
     const [employees, setEmployees] = useState([]);
     const [projects, setProjects] = useState([]);
@@ -32,7 +31,6 @@ const Projects = () => {
         budget: "",
         start_date: "",
         end_date: "",
-        time_running: "",
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -66,6 +64,40 @@ const Projects = () => {
         }
     };
 
+    const fetchEmployees = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get("http://localhost:5000/api/employees", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setEmployees(response.data);
+        } catch (err) {
+            setError("Failed to fetch employees");
+        }
+    };
+
+    // Assign Employee to Project
+  const assignEmployee = async (projectId, employeeId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:5069/api/projects/${projectId}/assign-employee`,
+        { employeeId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Employee assigned successfully!");
+      fetchProjects(); // Refresh project list
+    } catch (err) {
+      setError("Failed to assign employee");
+    }
+  };
+
+    useEffect(() => {
+        fetchProjects();
+        fetchHighBudgetProjects();
+        fetchEmployees();
+    }, []);
+
     const handleFormSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -80,7 +112,6 @@ const Projects = () => {
                 budget: "",
                 start_date: "",
                 end_date: "",
-                time_running: "",
             });
             fetchProjects();
         } catch (err) {
@@ -116,30 +147,12 @@ const Projects = () => {
         }
     };
 
-    const fetchEmployees = async () => {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await axios.get("http://localhost:5000/api/employees", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setEmployees(response.data);
-        } catch (err) {
-          setError("Failed to fetch employees");
-        }
-      };
-      
-
-      useEffect(() => {
-        fetchProjects();
-        fetchHighBudgetProjects();
-        fetchEmployees();
-      }, []);
-
     return (
         <Container maxWidth="lg" style={{ marginTop: "30px", paddingBottom: "20px" }}>
             <Typography variant="h4" style={{ marginBottom: "30px" }}>
                 Projects Management
             </Typography>
+            
             <Grid container spacing={3}>
                 <Grid item xs={6}>
                     <Typography variant="h6">Projects with Budget Over 12000</Typography>
@@ -172,7 +185,9 @@ const Projects = () => {
                             label="Description"
                             name="description"
                             value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            onChange={(e) =>
+                                setFormData({ ...formData, description: e.target.value })
+                            }
                             fullWidth
                             margin="normal"
                             required
@@ -192,7 +207,9 @@ const Projects = () => {
                             name="start_date"
                             type="date"
                             value={formData.start_date}
-                            onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                            onChange={(e) =>
+                                setFormData({ ...formData, start_date: e.target.value })
+                            }
                             fullWidth
                             margin="normal"
                             InputLabelProps={{ shrink: true }}
@@ -208,17 +225,12 @@ const Projects = () => {
                             margin="normal"
                             InputLabelProps={{ shrink: true }}
                         />
-                        <TextField
-                            label="Time Running"
-                            name="time_running"
-                            type="number"
-                            value={formData.time_running}
-                            onChange={(e) => setFormData({ ...formData, time_running: e.target.value })}
-                            fullWidth
-                            margin="normal"
-                            required
-                        />
-                        <Button type="submit" variant="contained" color="primary" style={{ marginTop: "10px" }}>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            style={{ marginTop: "10px" }}
+                        >
                             Add Project
                         </Button>
                     </form>
@@ -241,68 +253,56 @@ const Projects = () => {
                                 <TableCell><strong>Budget</strong></TableCell>
                                 <TableCell><strong>Start Date</strong></TableCell>
                                 <TableCell><strong>End Date</strong></TableCell>
+                                <TableCell><strong>Assigned Employee</strong></TableCell>
                                 <TableCell><strong>Actions</strong></TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {projects.map((project) => (
-                                <TableRow key={project.id} selected={selectedProjects.includes(project.id)}>
-                                    <TableCell>
-                                        {selectedProjects.includes(project.id) ? (
-                                            <TextField
-                                                value={formData.name}
-                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                fullWidth
-                                                variant="outlined"
-                                                size="small"
-                                            />
-                                        ) : (
-                                            project.name
-                                        )}
-                                    </TableCell>
+                                <TableRow key={project.id}>
+                                    <TableCell>{project.name}</TableCell>
                                     <TableCell>{project.budget}</TableCell>
-                                    <TableCell>{project.start_date}</TableCell>
-                                    <TableCell>{project.end_date || "N/A"}</TableCell>
                                     <TableCell>
-                                        {selectedProjects.includes(project.id) ? (
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                size="small"
-                                                onClick={async () => {
-                                                    try {
-                                                        const token = localStorage.getItem("token");
-                                                        await axios.put(
-                                                            `http://localhost:5069/api/projects/${project.id}/name`,
-                                                            { name: formData.name },
-                                                            { headers: { Authorization: `Bearer ${token}` } }
-                                                        );
-                                                        alert("Project name updated successfully!");
-                                                        setSelectedProjects(selectedProjects.filter((id) => id !== project.id));
-                                                        fetchProjects();
-                                                    } catch (err) {
-                                                        setError("Failed to update project name");
-                                                    }
-                                                }}
-                                                style={{ marginRight: "8px" }}
-                                            >
-                                                Save
-                                            </Button>
-                                        ) : (
-                                            <IconButton
-                                                onClick={() => {
-                                                    setSelectedProjects([project.id]);
-                                                    setFormData({ ...formData, name: project.name });
-                                                }}
-                                                color="primary"
-                                            >
-                                                <EditIcon />
-                                            </IconButton>
-                                        )}
+                                        {project.start_date
+                                            ? new Date(project.start_date).toLocaleDateString()
+                                            : "N/A"}
+                                    </TableCell>
+                                    <TableCell>
+                                        {project.end_date
+                                            ? new Date(project.end_date).toLocaleDateString()
+                                            : "N/A"}
+                                    </TableCell>
+                                    <TableCell>
+                                        <TextField
+                                            select
+                                            size="small"
+                                            fullWidth
+                                            value={project.assigned_employee_id || ""}
+                                            onChange={(e) =>
+                                                assignEmployee(project.id, e.target.value)
+                                            }
+                                            SelectProps={{
+                                                native: true,
+                                            }}
+                                        >
+                                            <option value="">-- Select Employee --</option>
+                                            {employees.map((employee) => (
+                                                <option key={employee.id} value={employee.id}>
+                                                    {employee.name}
+                                                </option>
+                                            ))}
+                                        </TextField>
+                                    </TableCell>
+                                    <TableCell>
                                         <IconButton
-                                            onClick={() => handleDelete(project.id)}
+                                            onClick={() => alert("Edit functionality not implemented yet")}
+                                            color="primary"
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                        <IconButton
+                                            onClick={() => alert("Delete functionality not implemented yet")}
                                             color="error"
-                                            disabled={selectedProjects.includes(project.id)}
                                         >
                                             <DeleteIcon />
                                         </IconButton>
@@ -311,17 +311,7 @@ const Projects = () => {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button
-                        variant="contained"
-                        color="secondary"
-                        onClick={handleDeleteMultiple}
-                        style={{ marginTop: "10px" }}
-                        disabled={selectedProjects.length === 0}
-                    >
-                        Delete Selected
-                    </Button>
                 </TableContainer>
-
             )}
         </Container>
     );

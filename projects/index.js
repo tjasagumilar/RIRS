@@ -199,15 +199,50 @@ app.post("/api/login", async (req, res) => {
   });
 });
 
-// Route: Fetch All Projects (Protected)
-app.get("/api/projects", authenticateToken, (req, res) => {
-  const query = "SELECT * FROM projects";
-  db.query(query, (err, results) => {
+app.get("/api/projects", authenticateToken, async (req, res) => {
+  const projectQuery = `
+    SELECT 
+      id, name, description, budget, start_date, end_date, assigned_employee_id 
+    FROM projects
+  `;
+
+  db.query(projectQuery, async (err, projects) => {
     if (err) {
       console.error("Failed to fetch projects:", err);
       return res.status(500).json({ error: "Failed to fetch projects" });
     }
-    res.json(results);
+
+    // Get all unique assigned_employee_ids
+    const employeeIds = [...new Set(projects.map((p) => p.assigned_employee_id).filter(Boolean))];
+
+    try {
+      // Fetch employee details from the employee microservice
+      const token = req.headers["authorization"].split(" ")[1]; // Extract Bearer token
+      const employeeResponse = await axios.get("http://localhost:5000/api/employees", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const employees = employeeResponse.data; // [{ id: 1, name: "John" }, { id: 2, name: "Jane" }]
+
+      // Create a map of employee IDs to names
+      const employeeMap = employees.reduce((map, employee) => {
+        map[employee.id] = employee.name;
+        return map;
+      }, {});
+
+      // Merge employee names into the project data
+      const projectsWithEmployees = projects.map((project) => ({
+        ...project,
+        assigned_employee: project.assigned_employee_id
+          ? employeeMap[project.assigned_employee_id] || "Unassigned"
+          : "Unassigned",
+      }));
+
+      res.json(projectsWithEmployees);
+    } catch (error) {
+      console.error("Failed to fetch employees from microservice:", error.message);
+      res.status(500).json({ error: "Failed to fetch employee details" });
+    }
   });
 });
 
@@ -225,9 +260,9 @@ app.get("/api/projects/budget-over-12000", authenticateToken, (req, res) => {
 
 // Route: Add a Single Project (Protected)
 app.post("/api/projects", authenticateToken, (req, res) => {
-  const { name, description, budget, start_date, end_date, time_running } = req.body;
-  const query = "INSERT INTO projects (name, description, budget, start_date, end_date, time_running) VALUES (?, ?, ?, ?, ?, ?)";
-  db.query(query, [name, description, budget, start_date, end_date, time_running], (err, result) => {
+  const { name, description, budget, start_date, end_date } = req.body;
+  const query = "INSERT INTO projects (name, description, budget, start_date, end_date) VALUES (?, ?, ?, ?, ?)";
+  db.query(query, [name, description, budget, start_date, end_date], (err, result) => {
     if (err) {
       console.error("Failed to add project:", err);
       return res.status(500).json({ error: "Failed to add project" });
@@ -239,8 +274,8 @@ app.post("/api/projects", authenticateToken, (req, res) => {
 // Route: Add Multiple Projects (Protected)
 app.post("/api/projects/multiple", authenticateToken, (req, res) => {
   const projects = req.body; // Expecting an array of project objects
-  const query = "INSERT INTO projects (name, description, budget, start_date, end_date, time_running) VALUES ?";
-  const values = projects.map(p => [p.name, p.description, p.budget, p.start_date, p.end_date, p.time_running]);
+  const query = "INSERT INTO projects (name, description, budget, start_date, end_date) VALUES ?";
+  const values = projects.map(p => [p.name, p.description, p.budget, p.start_date, p.end_date]);
   db.query(query, [values], (err, result) => {
     if (err) {
       console.error("Failed to add multiple projects:", err);
@@ -301,6 +336,23 @@ app.delete("/api/projects", authenticateToken, (req, res) => {
       return res.status(500).json({ error: "Failed to delete multiple projects" });
     }
     res.json({ message: "Multiple projects deleted successfully", affectedRows: result.affectedRows });
+  });
+});
+
+app.post("/api/projects/:id/assign-employee", authenticateToken, (req, res) => {
+  const { id } = req.params; // Project ID
+  const { employeeId } = req.body; // Employee ID to assign
+
+  const query = "UPDATE projects SET assigned_employee_id = ? WHERE id = ?";
+  db.query(query, [employeeId, id], (err, result) => {
+    if (err) {
+      console.error("Failed to assign employee:", err);
+      return res.status(500).json({ error: "Failed to assign employee" });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    res.json({ message: "Employee assigned successfully" });
   });
 });
 

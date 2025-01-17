@@ -34,21 +34,18 @@ CREATE TABLE `projects` (
   `budget` decimal(10,2) NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
-  `time_running` decimal(5,2) NOT NULL,
+  `assigned_employee_id` int DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
 -- Dumping data for table `projects`
---
 
-INSERT IGNORE INTO `projects` (`id`, `name`, `description`, `budget`, `start_date`, `end_date`, `time_running`) VALUES
-(1, 'Project Alpha', 'Description for Project Alpha', 10000.00, '2024-01-01', '2024-06-30', 120.00),
-(2, 'Project Beta', 'Description for Project Beta', 20000.00, '2024-02-01', NULL, 80.00),
-(3, 'Project Gamma', 'Description for Project Gamma', 15000.00, '2024-03-01', '2024-09-30', 200.00);
+INSERT IGNORE INTO `projects` (`id`, `name`, `description`, `budget`, `start_date`, `end_date`, `assigned_employee_id`) VALUES
+(1, 'Project Alpha', 'Description for Project Alpha', 10000.00, '2024-01-01', '2024-06-30', NULL),
+(2, 'Project Beta', 'Description for Project Beta', 20000.00, '2024-02-01', NULL, NULL),
+(3, 'Project Gamma', 'Description for Project Gamma', 15000.00, '2024-03-01', '2024-09-30', NULL);
 
 COMMIT;
-
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
