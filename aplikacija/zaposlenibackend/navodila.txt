@@ -1,0 +1,6 @@
+
+zaženi
+docker-compose -f compose-zaposleni.yml up --build
+
+stop
+docker-compose -f compose-zaposleni.yml down

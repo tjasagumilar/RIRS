@@ -1,9 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { AppBar, Toolbar, Button, Typography } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = ({ onLogout, userName }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    onLogout();
+    navigate("/");
+  };
+
   return (
     <AppBar position="static">
       <Toolbar>
@@ -20,9 +27,12 @@ const Header = ({ onLogout, userName }) => {
           Pregled
         </Button>
         <Button color="inherit" component={Link} to="/budgets">
-          Budgets
+          Budget
         </Button>
-        <Button color="inherit" onClick={onLogout}>
+        <Button color="inherit" component={Link} to="/employees">
+          Zaposeni
+        </Button>
+        <Button color="inherit" onClick={handleLogout}>
           Odjava
         </Button>
       </Toolbar>
