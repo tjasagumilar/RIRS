@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mysql:
     image: mysql:latest
-    container_name: my_mysql
+    container_name: my_mysql 
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword123
       MYSQL_DATABASE: projectdb
@@ -36,7 +36,7 @@ services:
     container_name: external_mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword123
-      MYSQL_DATABASE: projectprojectdb
+      MYSQL_DATABASE: projectdb
       MYSQL_USER: projectuser
       MYSQL_PASSWORD: projectpass123
     ports:
@@ -47,24 +47,9 @@ services:
     networks:
       - my_network
 
-  external_phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    container_name: external_phpmyadmin
-    environment:
-      PMA_HOST: external_mysql
-      PMA_USER: projectuser
-      PMA_PASSWORD: projectpass123
-    ports:
-      - "8081:80" # Use a different port for the external phpMyAdmin
-    depends_on:
-      - external_mysql
-    networks:
-      - my_network
-
 volumes:
   mysql_data:
   external_mysql_data:
-
 
 networks:
   my_network:

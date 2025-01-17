@@ -13,6 +13,7 @@ import LoginForm from "./components/LoginForm";
 import EmployeeHoursTable from "./components/EmployeeHoursTable";
 import Overview from "./components/Overview";
 import CallbackHandler from "./components/CallbackHandler";
+import Projects from "./components/Projects";
 import axios from "axios";
 import { decodeJwt } from "jose";
 
@@ -130,6 +131,10 @@ const AppContent = ({
         />
         {isAuthenticated ? (
           <>
+            <Route
+              path="/projects"
+              element={isAuthenticated ? <Projects /> : <Navigate to="/" replace />}
+            />
             <Route path="/vnesiUre" element={<EmployeeEntryForm />} />
             <Route
               path="/mojaEvidenca"

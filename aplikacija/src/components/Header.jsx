@@ -9,8 +9,8 @@ const Header = ({ onNavigate, onLogout, userName }) => {
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Evidenca ur za {userName || "Uporabnik"}!
         </Typography>
-    
-        
+
+
         <Button color="inherit" onClick={() => onNavigate("/vnesiUre")}>
           Vnesi ure
         </Button>
@@ -19,6 +19,9 @@ const Header = ({ onNavigate, onLogout, userName }) => {
         </Button>
         <Button color="inherit" onClick={() => onNavigate("/pregled")}>
           Pregled
+        </Button>
+        <Button color="inherit" onClick={() => onNavigate("/projects")}>
+          Projects
         </Button>
         <Button color="inherit" onClick={onLogout}>
           Odjava
@@ -30,8 +33,8 @@ const Header = ({ onNavigate, onLogout, userName }) => {
 
 Header.propTypes = {
   onNavigate: PropTypes.func.isRequired,
-  onLogout: PropTypes.func.isRequired,  
-  userName: PropTypes.string,          
+  onLogout: PropTypes.func.isRequired,
+  userName: PropTypes.string,
 };
 
 export default Header;
