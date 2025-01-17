@@ -24,10 +24,13 @@ const EmployeeHoursTable = ({ employeeId, onEdit }) => {
   const [entries, setEntries] = useState([]);
 
   useEffect(() => {
+    console.log(employeeId)
     const fetchEntries = async () => {
       const source = axios.CancelToken.source();
       try {
         const token = localStorage.getItem("token");
+        console.log('Token:', token);  // Add this line for debugging
+
         const response = await axios.get(
           `http://localhost:5000/api/entries?employeeId=${employeeId}`,
           {
