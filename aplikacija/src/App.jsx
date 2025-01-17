@@ -152,6 +152,10 @@ const AppContent = ({
               path="/pregled"
               element={<Overview employeeId={user?.id} />}
             />
+            <Route
+              path="/lokacije"
+              element={<Lokacije employeeId={user?.id} />}
+            />
           </>
         ) : (
           <Route path="*" element={<Navigate to="/" replace />} />
