@@ -9,9 +9,9 @@ import EmployeeManagement from "./components/EmployeeManagement";
 import Overview from "./components/Overview";
 import CallbackHandler from "./components/CallbackHandler";
 import Budgets from "./components/Budgets"; // Import Budgets
-import Dopust from "./components/Dopust";
-import DopustAdmin from "./components/DopustAdmin";
-import Prihod from "./components/Prihod";
+import Dopust from "./components/dopust/Dopust";
+import DopustAdmin from "./components/dopust/DopustAdmin";
+import Prihod from "./components/prihod/Prihod";
 import axios from "axios";
 import { decodeJwt } from "jose";
 
@@ -123,6 +123,9 @@ const AppContent = ({ user, selectedEntry, handleLogout, handleEdit }) => {
         <Route path="/pregled" element={<Overview />} />
         <Route path="/budgets" element={<Budgets />} />
         <Route path="/employees" element={<EmployeeManagement />} />
+        <Route path="/dopust" element={<Dopust employeeId={user?.id}  />}/>
+        <Route path="/prihod" element={<Prihod employeeId={user?.id} />}/>
+        <Route path="/dopustAdmin" element={ <DopustAdmin  />} />
       </Routes>
     </>
   );

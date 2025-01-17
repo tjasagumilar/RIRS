@@ -32,19 +32,16 @@ const Header = ({ onLogout, userName }) => {
         <Button color="inherit" component={Link} to="/employees">
           Zaposeni
         </Button>
-        <Button color="inherit" onClick={handleLogout}>
-        <Button color="inherit" onClick={() => onNavigate("/dopust")}>
+        <Button color="inherit" component={Link} to="/dopust">
           Dopust
         </Button>
-        <Button color="inherit" onClick={() => onNavigate("/dopustAdmin")}>
-          DopustAdmin
+        <Button color="inherit" component={Link} to="/dopustAdmin">
+          Dopust Admin
         </Button>
-        <Button color="inherit" onClick={() => onNavigate("/prihod")}>
+        <Button color="inherit" component={Link} to="/prihod">
           Prihod
         </Button>
-        <Button color="inherit" onClick={onLogout}>
-          Odjava
-        </Button>
+        <Button color="inherit" onClick={handleLogout} />       
       </Toolbar>
     </AppBar>
   );
