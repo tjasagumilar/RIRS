@@ -1,0 +1,5 @@
+#Da zaženeš
+docker-compose -f budget-compose.yml up
+
+#izklop
+docker-compose -f budget-compose.yml down
