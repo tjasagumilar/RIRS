@@ -72,55 +72,19 @@ const App = () => {
 
   return (
     <Router>
+      {isAuthenticated && <Header userName={user?.name} onLogout={handleLogout} />}
       <Routes>
+      <Route path="/projects"
+          element={isAuthenticated ? <Projects /> : <Navigate to="/" replace />}
+        />
         <Route
           path="/"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/vnesiUre" replace />
-            ) : (
-              <LoginForm onLogin={handleLogin} />
-            )
-          }
+          element={isAuthenticated ? <Navigate to="/vnesiUre" /> : <LoginForm onLogin={handleLogin} />}
         />
-        <Route
-          path="/callback"
-          element={<CallbackHandler onLogin={handleLogin} />}
-        />
-
-        {isAuthenticated ? (
-          <>
-            <Route
-              path="/projects"
-              element={isAuthenticated ? <Projects /> : <Navigate to="/" replace />}
-            />
-            <Route path="/vnesiUre" element={<EmployeeEntryForm />} />
-            <Route
-              path="/mojaEvidenca"
-              element={
-                <EmployeeHoursTable
-                  employeeId={user?.id}
-                  onEdit={(entry) => {
-                    handleEdit(entry);
-                    navigate("/editEntry");
-                  }}
-                />
-              }
-            />
-
-        {isAuthenticated && (
-          <Route
-            path="/*"
-            element={
-              <AppContent
-                user={user}
-                selectedEntry={selectedEntry}
-                handleLogout={handleLogout}
-                handleEdit={handleEdit}
-              />
-            }
-          />
-        )}
+        <Route path="/vnesiUre" element={isAuthenticated ? <EmployeeEntryForm /> : <Navigate to="/" />} />
+        <Route path="/mojaEvidenca" element={isAuthenticated ? <EmployeeHoursTable /> : <Navigate to="/" />} />
+        <Route path="/pregled" element={isAuthenticated ? <Overview /> : <Navigate to="/" />} />
+        <Route path="/callback" element={<CallbackHandler onLogin={handleLogin} />} />
       </Routes>
     </Router>
   );
@@ -131,6 +95,7 @@ const AppContent = ({ user, selectedEntry, handleLogout, handleEdit }) => {
     <>
       <Header userName={user?.name} onLogout={handleLogout} />
       <Routes>
+        
         <Route path="/vnesiUre" element={<EmployeeEntryForm />} />
         <Route
           path="/mojaEvidenca"
@@ -145,9 +110,9 @@ const AppContent = ({ user, selectedEntry, handleLogout, handleEdit }) => {
         <Route path="/pregled" element={<Overview />} />
         <Route path="/budgets" element={<Budgets />} />
         <Route path="/employees" element={<EmployeeManagement />} />
-        <Route path="/dopust" element={<Dopust employeeId={user?.id}  />}/>
-        <Route path="/prihod" element={<Prihod employeeId={user?.id} />}/>
-        <Route path="/dopustAdmin" element={ <DopustAdmin  />} />
+        <Route path="/dopust" element={<Dopust employeeId={user?.id} />} />
+        <Route path="/prihod" element={<Prihod employeeId={user?.id} />} />
+        <Route path="/dopustAdmin" element={<DopustAdmin />} />
       </Routes>
     </>
   );

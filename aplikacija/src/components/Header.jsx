@@ -21,6 +21,7 @@ const Header = ({ onLogout, userName }) => {
 
 
         <Button color="inherit" onClick={() => onNavigate("/vnesiUre")}>
+        </Button>
 
         <Button color="inherit" component={Link} to="/vnesiUre">
 
@@ -33,11 +34,12 @@ const Header = ({ onLogout, userName }) => {
           Pregled
         </Button>
 
-        <Button color="inherit" onClick={() => onNavigate("/projects")}>
+        <Button color="inherit" component={Link} to="/projects">
           Projects
         </Button>
         <Button color="inherit" onClick={onLogout}>
           Odjava
+          </Button>
 
         <Button color="inherit" component={Link} to="/budgets">
           Budget
