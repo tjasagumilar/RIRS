@@ -77,20 +77,20 @@ const Projects = () => {
     };
 
     // Assign Employee to Project
-  const assignEmployee = async (projectId, employeeId) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `http://localhost:5069/api/projects/${projectId}/assign-employee`,
-        { employeeId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("Employee assigned successfully!");
-      fetchProjects(); // Refresh project list
-    } catch (err) {
-      setError("Failed to assign employee");
-    }
-  };
+    const assignEmployee = async (projectId, employeeId) => {
+        try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+                `http://localhost:5069/api/projects/${projectId}/assign-employee`,
+                { employeeId },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            alert("Employee assigned successfully!");
+            fetchProjects(); // Refresh project list
+        } catch (err) {
+            setError("Failed to assign employee");
+        }
+    };
 
     useEffect(() => {
         fetchProjects();
@@ -152,7 +152,7 @@ const Projects = () => {
             <Typography variant="h4" style={{ marginBottom: "30px" }}>
                 Projects Management
             </Typography>
-            
+
             <Grid container spacing={3}>
                 <Grid item xs={6}>
                     <Typography variant="h6">Projects with Budget Over 12000</Typography>
@@ -294,15 +294,53 @@ const Projects = () => {
                                         </TextField>
                                     </TableCell>
                                     <TableCell>
+                                        {selectedProjects.includes(project.id) ? (
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                size="small"
+                                                onClick={async () => {
+                                                    try {
+                                                        const token = localStorage.getItem("token");
+                                                        await axios.put(
+                                                            `http://localhost:5069/api/projects/${project.id}`,
+                                                            {
+                                                                name: formData.name,
+                                                                description: formData.description,
+                                                                budget: formData.budget,
+                                                            },
+                                                            { headers: { Authorization: `Bearer ${token}` } }
+                                                        );
+                                                        alert("Project updated successfully!");
+                                                        setSelectedProjects([]); // Clear editing state
+                                                        fetchProjects(); // Refresh the list
+                                                    } catch (err) {
+                                                        setError("Failed to update project");
+                                                    }
+                                                }}
+                                                style={{ marginRight: "8px" }}
+                                            >
+                                                Save
+                                            </Button>
+                                        ) : (
+                                            <IconButton
+                                                onClick={() => {
+                                                    setSelectedProjects([project.id]); // Mark project as selected for editing
+                                                    setFormData({
+                                                        name: project.name,
+                                                        description: project.description,
+                                                        budget: project.budget,
+                                                    });
+                                                }}
+                                                color="primary"
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                        )}
                                         <IconButton
-                                            onClick={() => alert("Edit functionality not implemented yet")}
-                                            color="primary"
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            onClick={() => alert("Delete functionality not implemented yet")}
+                                            onClick={() => handleDelete(project.id)}
                                             color="error"
+                                            disabled={selectedProjects.includes(project.id)}
                                         >
                                             <DeleteIcon />
                                         </IconButton>
