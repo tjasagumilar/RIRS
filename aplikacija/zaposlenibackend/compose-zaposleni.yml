@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  zaposlenibackend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zaposlenibackend-service
+    restart: always
+    environment:
+      - DB_FILE=/data/zaposleni.db
+    ports:
+      - "7000:7000"
+    volumes:
+      - zaposlenibackend_data:/data
+    env_file:
+      - ../.env
+
+volumes:
+  zaposlenibackend_data:

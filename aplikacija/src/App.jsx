@@ -5,6 +5,7 @@ import EmployeeEntryForm from "./components/EmployeeEntryForm";
 import EditEntryForm from "./components/EditEntryForm";
 import LoginForm from "./components/LoginForm";
 import EmployeeHoursTable from "./components/EmployeeHoursTable";
+import EmployeeManagement from "./components/EmployeeManagement";
 import Overview from "./components/Overview";
 import CallbackHandler from "./components/CallbackHandler";
 import Budgets from "./components/Budgets"; // Import Budgets
@@ -116,7 +117,8 @@ const AppContent = ({ user, selectedEntry, handleLogout, handleEdit }) => {
         />
         <Route path="/editEntry" element={<EditEntryForm entry={selectedEntry} />} />
         <Route path="/pregled" element={<Overview />} />
-        <Route path="/budgets" element={<Budgets />} /> {/* Add Budgets route */}
+        <Route path="/budgets" element={<Budgets />} />
+        <Route path="/employees" element={<EmployeeManagement />} />
       </Routes>
     </>
   );
