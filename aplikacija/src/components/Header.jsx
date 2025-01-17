@@ -1,8 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { AppBar, Toolbar, Button, Typography } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
 
-const Header = ({ onNavigate, onLogout, userName }) => {
+const Header = ({ onLogout, userName }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    onLogout();
+    navigate("/");
+  };
+
   return (
     <AppBar position="static">
       <Toolbar>
@@ -11,28 +19,52 @@ const Header = ({ onNavigate, onLogout, userName }) => {
         </Typography>
 
 
+
         <Button color="inherit" onClick={() => onNavigate("/vnesiUre")}>
+
+        <Button color="inherit" component={Link} to="/vnesiUre">
+
           Vnesi ure
         </Button>
-        <Button color="inherit" onClick={() => onNavigate("/mojaEvidenca")}>
+        <Button color="inherit" component={Link} to="/mojaEvidenca">
           Moja evidenca
         </Button>
-        <Button color="inherit" onClick={() => onNavigate("/pregled")}>
+        <Button color="inherit" component={Link} to="/pregled">
           Pregled
         </Button>
+
         <Button color="inherit" onClick={() => onNavigate("/projects")}>
           Projects
         </Button>
         <Button color="inherit" onClick={onLogout}>
           Odjava
+
+        <Button color="inherit" component={Link} to="/budgets">
+          Budget
         </Button>
+        <Button color="inherit" component={Link} to="/employees">
+          Zaposeni
+        </Button>
+        <Button color="inherit" component={Link} to="/dopust">
+          Dopust
+        </Button>
+        <Button color="inherit" component={Link} to="/dopustAdmin">
+          Dopust Admin
+        </Button>
+        <Button color="inherit" component={Link} to="/prihod">
+          Prihod
+
+        </Button>
+        <Button color="inherit" onClick={handleLogout} />       
       </Toolbar>
     </AppBar>
   );
 };
 
 Header.propTypes = {
+
   onNavigate: PropTypes.func.isRequired,
+
   onLogout: PropTypes.func.isRequired,
   userName: PropTypes.string,
 };

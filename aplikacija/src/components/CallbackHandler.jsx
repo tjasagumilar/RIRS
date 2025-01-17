@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { CircularProgress, Box, Typography } from "@mui/material";
 
 const CallbackHandler = () => {
   const navigate = useNavigate();
@@ -46,7 +47,23 @@ const CallbackHandler = () => {
     handleCallback();
   }, [navigate]);
 
-  return <div>Loading...</div>;
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        backgroundColor: "#f5f5f5",
+      }}
+    >
+      <CircularProgress size={80} />
+      <Typography variant="h6" sx={{ marginTop: 2 }}>
+        Nalaganje
+      </Typography>
+    </Box>
+  );
 };
 
 export default CallbackHandler;
