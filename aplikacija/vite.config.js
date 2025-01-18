@@ -7,9 +7,14 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:6000", // Backend server URL
+        target: "http://localhost:6000",
         changeOrigin: true,
         secure: false,
+      },
+      "/LogEmployeeEvent": {
+        target: "https://dquo7ztzfd.execute-api.eu-north-1.amazonaws.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/LogEmployeeEvent/, "/LogEmployeeEvent"),
       },
     },
   },
