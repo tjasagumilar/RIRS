@@ -2,7 +2,7 @@
 FROM node:16-alpine
 
 # Install build dependencies
-RUN apk add --no-cache python3 py3-pip make g++ 
+RUN apk add --no-cache python3 py3-pip make g++ sqlite
 
 # Set working directory
 WORKDIR /app

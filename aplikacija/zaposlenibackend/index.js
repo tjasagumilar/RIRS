@@ -197,6 +197,18 @@ app.put("/api/employees/:id/position", authenticateToken, (req, res) => {
   }
 });
 
+// Get the average salary of employees
+app.get("/api/stats/average-salary", authenticateToken, (req, res) => {
+  try {
+    const row = db.prepare("SELECT AVG(salary) as averageSalary FROM employees").get();
+    res.json({ averageSalary: row.averageSalary });
+  } catch (err) {
+    console.error("Error calculating average salary:", err.message);
+    res.status(500).json({ error: "Failed to calculate average salary" });
+  }
+});
+
+
 
 // Delete employees by position (Protected)
 app.delete("/api/employees/position/:position", authenticateToken, (req, res) => {

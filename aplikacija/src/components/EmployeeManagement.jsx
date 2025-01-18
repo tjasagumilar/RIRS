@@ -25,11 +25,32 @@ const EmployeeManagement = () => {
   const [updatePosition, setUpdatePosition] = useState({ id: "", position: "" });
   const [positionToDelete, setPositionToDelete] = useState("");
 
+  
+  
+  const lambdaApiUrl = "/LogEmployeeEvent"; // Use relative path
+
+
+  // Log Employee Event to AWS Lambda
+  const handleLogEmployeeEvent = async (employeeId, action) => {
+    try {
+      const response = await axios.post(lambdaApiUrl, {
+        employeeId: employeeId,
+        action: action,
+        timestamp: new Date().toISOString(),
+      });
+      console.log("Log entry created successfully:", response.data.message);
+    } catch (error) {
+      console.error("Error logging employee event:", error);
+    }
+  };
+  
+  
+  
   // Pridobi vse zaposlene
   const handleFetchAllEmployees = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:7000/api/employees", {
+      const response = await axios.get("https://employeeservice-w53o.onrender.com/api/employees", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEmployees(response.data);
@@ -44,7 +65,7 @@ const EmployeeManagement = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:7000/api/employees/high-salary/${salaryThreshold}`,
+        `https://employeeservice-w53o.onrender.com/api/employees/high-salary/${salaryThreshold}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -71,7 +92,7 @@ const EmployeeManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:7000/api/employees/batch",
+        "https://employeeservice-w53o.onrender.com/api/employees/batch",
         { employees: newEmployees },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -95,7 +116,7 @@ const EmployeeManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:7000/api/employees/${updateSalary.id}/salary`,
+        `https://employeeservice-w53o.onrender.com/api/employees/${updateSalary.id}/salary`,
         { salary: updateSalary.salary },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -123,7 +144,7 @@ const EmployeeManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:7000/api/employees/${updatePosition.id}/position`,
+        `https://employeeservice-w53o.onrender.com/api/employees/${updatePosition.id}/position`,
         { position: updatePosition.position },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -150,7 +171,7 @@ const EmployeeManagement = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:7000/api/employees/position/${positionToDelete}`, {
+      await axios.delete(`https://employeeservice-w53o.onrender.com/api/employees/position/${positionToDelete}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Zaposleni so bili uspešno izbrisani!");
@@ -164,24 +185,25 @@ const EmployeeManagement = () => {
   // Izbriši zaposlenega po ID
   const handleDeleteEmployeeById = async () => {
     if (!employeeIdToDelete) {
-      alert("Prosimo, vnesite ID zaposlenega.");
+      alert("Please enter the employee ID.");
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:7000/api/employees/${employeeIdToDelete}`, {
+      await axios.delete(`https://employeeservice-w53o.onrender.com/api/employees/${employeeIdToDelete}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert("Zaposleni je bil uspešno izbrisan!");
+      alert("Employee successfully deleted!");
+      await handleLogEmployeeEvent(employeeIdToDelete, "delete"); // Log the delete action
       setEmployeeIdToDelete("");
-      handleFetchAllEmployees(); // Osveži seznam zaposlenih
+      handleFetchAllEmployees(); // Refresh the employee list
     } catch (error) {
-      console.error("Napaka pri brisanju zaposlenega po ID:", error);
+      console.error("Error deleting employee by ID:", error);
       if (error.response && error.response.status === 404) {
-        alert("Zaposleni ni bil najden. Preverite ID.");
+        alert("Employee not found. Check the ID.");
       } else {
-        alert("Brisanje zaposlenega ni uspelo. Več podrobnosti v konzoli.");
+        alert("Failed to delete employee. Check the console for details.");
       }
     }
   };
