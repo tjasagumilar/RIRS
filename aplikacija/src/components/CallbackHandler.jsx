@@ -60,7 +60,7 @@ const CallbackHandler = () => {
     >
       <CircularProgress size={80} />
       <Typography variant="h6" sx={{ marginTop: 2 }}>
-        Loading
+        Nalaganje
       </Typography>
     </Box>
   );
