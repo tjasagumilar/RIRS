@@ -87,27 +87,6 @@ const App = () => {
           path="/callback"
           element={<CallbackHandler onLogin={handleLogin} />}
         />
-
-        {isAuthenticated ? (
-          <>
-            <Route
-              path="/projects"
-              element={isAuthenticated ? <Projects /> : <Navigate to="/" replace />}
-            />
-            <Route path="/vnesiUre" element={<EmployeeEntryForm />} />
-            <Route
-              path="/mojaEvidenca"
-              element={
-                <EmployeeHoursTable
-                  employeeId={user?.id}
-                  onEdit={(entry) => {
-                    handleEdit(entry);
-                    navigate("/editEntry");
-                  }}
-                />
-              }
-            />
-
         {isAuthenticated && (
           <Route
             path="/*"
@@ -124,6 +103,7 @@ const App = () => {
       </Routes>
     </Router>
   );
+
 };
 
 const AppContent = ({ user, selectedEntry, handleLogout, handleEdit }) => {
@@ -141,6 +121,7 @@ const AppContent = ({ user, selectedEntry, handleLogout, handleEdit }) => {
             />
           }
         />
+        <Route path="/projects" element={<Projects entry={selectedEntry} />} />
         <Route path="/editEntry" element={<EditEntryForm entry={selectedEntry} />} />
         <Route path="/pregled" element={<Overview />} />
         <Route path="/budgets" element={<Budgets />} />

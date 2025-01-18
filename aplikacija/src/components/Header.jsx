@@ -18,10 +18,6 @@ const Header = ({ onLogout, userName }) => {
           Evidenca ur za {userName || "Uporabnik"}!
         </Typography>
 
-
-
-        <Button color="inherit" onClick={() => onNavigate("/vnesiUre")}>
-
         <Button color="inherit" component={Link} to="/vnesiUre">
 
           Vnesi ure
@@ -33,12 +29,9 @@ const Header = ({ onLogout, userName }) => {
           Pregled
         </Button>
 
-        <Button color="inherit" onClick={() => onNavigate("/projects")}>
+        <Button color="inherit" component={Link} to="/projects">
           Projects
         </Button>
-        <Button color="inherit" onClick={onLogout}>
-          Odjava
-
         <Button color="inherit" component={Link} to="/budgets">
           Budget
         </Button>
@@ -53,9 +46,10 @@ const Header = ({ onLogout, userName }) => {
         </Button>
         <Button color="inherit" component={Link} to="/prihod">
           Prihod
-
         </Button>
-        <Button color="inherit" onClick={handleLogout} />       
+        <Button color="inherit" onClick={handleLogout} >
+          Odjava
+          </Button>   
       </Toolbar>
     </AppBar>
   );
