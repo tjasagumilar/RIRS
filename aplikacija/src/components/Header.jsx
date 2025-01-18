@@ -41,7 +41,9 @@ const Header = ({ onLogout, userName }) => {
         <Button color="inherit" component={Link} to="/prihod">
           Prihod
         </Button>
-        <Button color="inherit" onClick={handleLogout} />       
+        <Button color="inherit" onClick={handleLogout}>
+          Odjava
+        </Button>
       </Toolbar>
     </AppBar>
   );
