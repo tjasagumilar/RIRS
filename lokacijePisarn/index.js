@@ -9,7 +9,7 @@ const port = 5005;
 app.use(cors());
 app.use(bodyParser.json());
 
-mongoose.connect("mongodb+srv://dbUser:dbUser123@cluster0.6aear.mongodb.net/imeBaze", {
+mongoose.connect("mongodb+srv://dbUser:dbUser123@cluster0.6aear.mongodb.net/Offices", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {

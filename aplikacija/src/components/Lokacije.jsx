@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -18,7 +19,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 
-const Lokacije = () => {
+const Lokacije = ({ onEdit }) => {
   const [offices, setOffices] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -51,12 +52,14 @@ const Lokacije = () => {
 
   const handleEdit = (office) => {
     console.log("Edit office:", office);
-    // Open a form or navigate to an edit page (not implemented in this example)
+    onEdit(office);
   };
+
+  const navigate = useNavigate();
 
   const handleAdd = () => {
     console.log("Add new office");
-    // Open a form for adding a new office (not implemented in this example)
+    navigate("/lokacijeAdd")
   };
 
   return (
@@ -82,7 +85,7 @@ const Lokacije = () => {
             <TableRow>
               <TableCell><strong>Ime</strong></TableCell>
               <TableCell><strong>Naslov</strong></TableCell>
-              <TableCell><strong>Kapaciteta</strong></TableCell>
+              <TableCell><strong>Uredi</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

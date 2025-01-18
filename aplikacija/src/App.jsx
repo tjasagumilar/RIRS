@@ -15,6 +15,7 @@ import Overview from "./components/Overview";
 import CallbackHandler from "./components/CallbackHandler";
 import axios from "axios";
 import { decodeJwt } from "jose";
+import LokacijeEdit from "./components/LokacijeEdit";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -153,8 +154,20 @@ const AppContent = ({
               element={<Overview employeeId={user?.id} />}
             />
             <Route
+              path="/lokacijeEdit"
+              element={<LokacijeEdit entry={selectedEntry} />}
+            />
+            <Route
+              path="/lokacijeAdd"
+              element={<LokacijeAdd />}
+            />
+            <Route
               path="/lokacije"
-              element={<Lokacije employeeId={user?.id} />}
+              element={<Lokacije employeeId={user?.id} 
+              onEdit={(entry) => {
+                handleEdit(entry);
+                navigate("/lokacijeEdit");
+              }}/>}
             />
           </>
         ) : (
