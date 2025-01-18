@@ -1,6 +1,9 @@
 
-zaženi
-docker-compose -f compose-zaposleni.yml up --build
+//zaženi
+//docker-compose -f compose-zaposleni.yml up --build
 
-stop
-docker-compose -f compose-zaposleni.yml down
+//stop
+//docker-compose -f compose-zaposleni.yml down
+
+
+NI TREBA ZAGANJAT, VSE JE V CLOUDU
