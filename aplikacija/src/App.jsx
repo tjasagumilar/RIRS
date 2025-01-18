@@ -12,6 +12,7 @@ import Budgets from "./components/Budgets";
 import Dopust from "./components/dopust/Dopust";
 import DopustAdmin from "./components/dopust/DopustAdmin";
 import Prihod from "./components/prihod/Prihod";
+import Projects from "./components/Projects";
 import axios from "axios";
 import { decodeJwt } from "jose";
 import LokacijeEdit from "./components/LokacijeEdit";
@@ -133,6 +134,7 @@ const AppContent = ({ user, selectedEntry, handleLogout, handleEdit }) => {
             />
           }
         />
+        <Route path="/projects" element={<Projects />} />
         <Route path="/lokacijeEdit" element={<LokacijeEdit entry={selectedEntry} />} />
         <Route path="/lokacijeAdd" element={<LokacijeAdd />} />
         <Route path="/editEntry" element={<EditEntryForm entry={selectedEntry} />} />
