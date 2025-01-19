@@ -3,13 +3,15 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require("axios");
-
+const { swaggerUi, swaggerDocs } = require('./swagger');
 
 const app = express();
 const port = 5001;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Connect to MongoDB Atlas
 mongoose.connect("mongodb+srv://mongo_user_1:geslo123@soa.feeob.mongodb.net/soa", {
@@ -44,7 +46,39 @@ function serializeDopust(dopust) {
 
 
 
-// GET 
+/**
+ * @swagger
+ * /dopustiAll:
+ *   get:
+ *     summary: Pridobi vse dopuste z informacijami o zaposlenih
+ *     tags: [Dopusti]
+ *     responses:
+ *       200:
+ *         description: Uspešno vrnjeni vsi dopusti
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   idZaposlenega:
+ *                     type: string
+ *                   zacetek:
+ *                     type: string
+ *                   konec:
+ *                     type: string
+ *                   opis:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                   employeeName:
+ *                     type: string
+ *       500:
+ *         description: Napaka pri pridobivanju dopustov
+ */
 app.get('/dopustiAll', async (req, res) => {
   try {
     const dopusti = await Dopust.find();
@@ -83,6 +117,30 @@ app.get('/dopustiAll', async (req, res) => {
 });
 
 
+/**
+ * @swagger
+ * /dopusti:
+ *   get:
+ *     summary: Pridobi dopuste po ID-ju zaposlenega
+ *     tags: [Dopusti]
+ *     parameters:
+ *       - in: query
+ *         name: employeeId
+ *         schema:
+ *           type: string
+ *         description: ID zaposlenega
+ *     responses:
+ *       200:
+ *         description: Uspešno vrnjeni dopusti
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Napaka pri pridobivanju dopustov
+ */
 app.get('/dopusti', async (req, res) => {
   try {
     const { employeeId } = req.query;
@@ -104,9 +162,37 @@ app.get('/dopusti', async (req, res) => {
 });
 
 
-// POST
-
-
+/**
+ * @swagger
+ * /dopusti:
+ *   post:
+ *     summary: Ustvari nov dopust in pošlji SMS obvestilo
+ *     tags: [Dopusti]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idZaposlenega:
+ *                 type: string
+ *               zacetek:
+ *                 type: string
+ *               konec:
+ *                 type: string
+ *               opis:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Uspešno ustvarjen dopust in poslano SMS obvestilo
+ *       400:
+ *         description: Manjkajoča polja
+ *       500:
+ *         description: Napaka pri ustvarjanju dopusta
+ */
 app.post('/dopusti', async (req, res) => {
   const { idZaposlenega, zacetek, konec, opis, status } = req.body;
 
@@ -136,6 +222,70 @@ app.post('/dopusti', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /kolektivni:
+ *   post:
+ *     summary: Ustvari kolektivni dopust za več zaposlenih
+ *     tags: [Dopusti]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employeeIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Seznam ID-jev zaposlenih, ki bodo imeli kolektivni dopust
+ *               zacetek:
+ *                 type: string
+ *                 format: date
+ *                 description: Datum začetka kolektivnega dopusta (v formatu YYYY-MM-DD)
+ *               konec:
+ *                 type: string
+ *                 format: date
+ *                 description: Datum konca kolektivnega dopusta (v formatu YYYY-MM-DD)
+ *     responses:
+ *       201:
+ *         description: Kolektivni dopusti so bili uspešno ustvarjeni
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 3 leave entries created successfully
+ *                 ids:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["60f08c2b6e8f5c8b8d6b7aef", "60f08c2b6e8f5c8b8d6b7aeb"]
+ *       400:
+ *         description: Manjkajoči ali napačni podatki (npr. `employeeIds` mora biti seznam ID-jev zaposlenih)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Missing fields or invalid data
+ *       500:
+ *         description: Napaka pri ustvarjanju kolektivnega dopusta
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error saving dopust entries
+ */
 app.post('/kolektivni', async (req, res) => {
   const { employeeIds, zacetek, konec } = req.body;
 
@@ -161,7 +311,41 @@ app.post('/kolektivni', async (req, res) => {
   }
 });
 
-// PUT
+
+/**
+ * @swagger
+ * /dopusti/{id}:
+ *   put:
+ *     summary: Posodobi obstoječi dopust
+ *     tags: [Dopusti]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID dopusta
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               zacetek:
+ *                 type: string
+ *               konec:
+ *                 type: string
+ *               opis:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Uspešno posodobljen dopust
+ *       404:
+ *         description: Dopust ni najden
+ *       500:
+ *         description: Napaka pri posodabljanju dopusta
+ */
 app.put('/dopusti/:id', async (req, res) => {
   const dopustId = req.params.id;
   console.log(dopustId)
@@ -186,6 +370,68 @@ app.put('/dopusti/:id', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /dopusti:
+ *   put:
+ *     summary: Posodobi status dopusta
+ *     tags: [Dopusti]
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID dopusta, ki ga želite posodobiti
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Novi status dopusta (npr. "Odobreno", "Zavrnjeno")
+ *     responses:
+ *       200:
+ *         description: Status dopusta uspešno posodobljen
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Dopust status updated successfully
+ *       400:
+ *         description: Manjkajoči parametri 'id' ali 'status'
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Both 'id' and 'status' query parameters are required
+ *       404:
+ *         description: Dopust z določenim ID ni bil najden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Dopust not found
+ *       500:
+ *         description: Napaka pri posodabljanju statusa dopusta
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error updating dopust status
+ */
 app.put('/dopusti', async (req, res) => {
   const { id, status } = req.query;
   console.log(id)
@@ -210,7 +456,27 @@ app.put('/dopusti', async (req, res) => {
 });
 
 
-// DELETE
+/**
+ * @swagger
+ * /dopusti/{id}:
+ *   delete:
+ *     summary: Izbriši dopust po ID-ju
+ *     tags: [Dopusti]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID dopusta
+ *     responses:
+ *       200:
+ *         description: Uspešno izbrisan dopust
+ *       404:
+ *         description: Dopust ni najden
+ *       500:
+ *         description: Napaka pri brisanju dopusta
+ */
 app.delete('/dopusti/:id', async (req, res) => {
   const dopustId = req.params.id;
 
@@ -226,6 +492,45 @@ app.delete('/dopusti/:id', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /zavrnjeni:
+ *   delete:
+ *     summary: Izbriši vse zavrnjene dopuste
+ *     tags: [Dopusti]
+ *     responses:
+ *       200:
+ *         description: Uspešno izbrisani zavrnjeni dopusti
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Canceled leave records deleted successfully
+ *       404:
+ *         description: Ni zavrnjenih dopustov za brisanje
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No canceled leave records found
+ *       500:
+ *         description: Napaka pri brisanju zavrnjenih dopustov
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error deleting canceled leave records
+ */
 app.delete('/zavrnjeni', async (req, res) => {
   try {
     const result = await Dopust.deleteMany({ status: "Zavrnjeno" });
