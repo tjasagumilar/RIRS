@@ -6,7 +6,7 @@ const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Dopusti API',
+      title: 'Statistika API',
       version: '1.0.0',
       description: 'API za upravljanje in statistiko dopustov',
     },
