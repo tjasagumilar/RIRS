@@ -35,6 +35,9 @@ const Header = ({ onLogout, userName }) => {
         <Button color="inherit" component={Link} to="/projects">
           Projects
         </Button>
+        <Button color="inherit" component={Link} to="/calendar">
+          Calendar
+        </Button>
         <Button color="inherit" component={Link} to="/employees">
           Zaposleni
         </Button>

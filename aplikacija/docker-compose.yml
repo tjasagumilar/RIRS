@@ -61,9 +61,42 @@ services:
     networks:
       - my_network
 
+  calendar_mysql:
+    image: mysql:latest
+    container_name: calendar_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: calendarroot123
+      MYSQL_DATABASE: calendardb
+      MYSQL_USER: calendaruser
+      MYSQL_PASSWORD: calendarpass123
+    ports:
+      - "3308:3306"
+    volumes:
+      - calendar_mysql_data:/var/lib/mysql
+      - ../calendar/calendar_setup.sql:/docker-entrypoint-initdb.d/calendar_setup.sql
+    networks:
+      - my_network
+
+  calendar_phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: calendar_phpmyadmin
+    environment:
+      PMA_HOST: calendar_mysql
+      PMA_USER: calendaruser
+      PMA_PASSWORD: calendarpass123
+    ports:
+      - "8082:80"
+    depends_on:
+      - calendar_mysql
+    networks:
+      - my_network
+
+
 volumes:
   mysql_data:
   external_mysql_data:
+  calendar_mysql_data:
+
 
 
 networks:
