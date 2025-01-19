@@ -2,12 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { swaggerUi, swaggerDocs } = require('./swagger');
 
 const app = express();
 const port = 5002;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Connect to MongoDB Atlas
 mongoose.connect("mongodb+srv://mongo_user_2:geslo123@soa1.xy5i2.mongodb.net/?retryWrites=true&w=majority&appName=soa1", {
@@ -46,7 +49,33 @@ function serializePrihod(prihod) {
   };
 }
 
-// GET 
+/**
+ * @swagger
+ * /prihod/{id}:
+ *   get:
+ *     summary: Pridobi vse prihode za določenega zaposlenega
+ *     tags: [Prihodi]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID zaposlenega
+ *     responses:
+ *       200:
+ *         description: Seznam prihoda zaposlenega
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Prihod'
+ *       404:
+ *         description: Ni podatkov za tega zaposlenega
+ *       500:
+ *         description: Napaka pri pridobivanju podatkov
+ */
 app.get('/prihod/:id', async (req, res) => {
   const { id } = req.params;  
 
@@ -65,6 +94,37 @@ app.get('/prihod/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /prihod/{datum}/{idzaposlenega}:
+ *   get:
+ *     summary: Pridobi prihod za določen datum in zaposlenega
+ *     tags: [Prihodi]
+ *     parameters:
+ *       - in: path
+ *         name: datum
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Datum (YYYY-MM-DD)
+ *       - in: path
+ *         name: idzaposlenega
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID zaposlenega
+ *     responses:
+ *       200:
+ *         description: Podatki o prihodu zaposlenega za določen datum
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Prihod'
+ *       404:
+ *         description: Podatki o prihodu niso na voljo
+ *       500:
+ *         description: Napaka pri pridobivanju podatkov
+ */
 app.get('/prihod/:datum/:idzaposlenega', async (req, res) => {
   const { datum, idzaposlenega } = req.params;
 
@@ -82,6 +142,41 @@ app.get('/prihod/:datum/:idzaposlenega', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /malicazacetek/{datum}/{idzaposlenega}:
+ *   get:
+ *     summary: Get the start time of the break for a specific date and employee
+ *     parameters:
+ *       - in: path
+ *         name: datum
+ *         required: true
+ *         description: The date of the break
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: path
+ *         name: idzaposlenega
+ *         required: true
+ *         description: The ID of the employee
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: The start time of the break
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 malicaZacetek:
+ *                   type: string
+ *                   description: Start time of the break
+ *       '404':
+ *         description: No malicaZacetek found for the given date and employee
+ *       '500':
+ *         description: Error fetching malicaZacetek
+ */
 app.get('/malicazacetek/:datum/:idzaposlenega', async (req, res) => {
   const { datum, idzaposlenega } = req.params;
 
@@ -99,6 +194,41 @@ app.get('/malicazacetek/:datum/:idzaposlenega', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /malicakonec/{datum}/{idzaposlenega}:
+ *   get:
+ *     summary: Get the end time of the break for a specific date and employee
+ *     parameters:
+ *       - in: path
+ *         name: datum
+ *         required: true
+ *         description: The date of the break
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: path
+ *         name: idzaposlenega
+ *         required: true
+ *         description: The ID of the employee
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: The end time of the break
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 malicaKonec:
+ *                   type: string
+ *                   description: End time of the break
+ *       '404':
+ *         description: No malicaKonec found for the given date and employee
+ *       '500':
+ *         description: Error fetching malicaKonec
+ */
 app.get('/malicakonec/:datum/:idzaposlenega', async (req, res) => {
   const { datum, idzaposlenega } = req.params;
 
@@ -116,6 +246,41 @@ app.get('/malicakonec/:datum/:idzaposlenega', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /odhod/{datum}/{idzaposlenega}:
+ *   get:
+ *     summary: Get the end time of the workday (departure) for a specific date and employee
+ *     parameters:
+ *       - in: path
+ *         name: datum
+ *         required: true
+ *         description: The date of departure
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: path
+ *         name: idzaposlenega
+ *         required: true
+ *         description: The ID of the employee
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: The departure time of the employee
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 odhod:
+ *                   type: string
+ *                   description: Departure time of the employee
+ *       '404':
+ *         description: No odhod found for the given date and employee
+ *       '500':
+ *         description: Error fetching odhod
+ */
 app.get('/odhod/:datum/:idzaposlenega', async (req, res) => {
   const { datum, idzaposlenega } = req.params;
 
@@ -133,7 +298,38 @@ app.get('/odhod/:datum/:idzaposlenega', async (req, res) => {
   }
 });
 
-// POST
+/**
+ * @swagger
+ * /prihod/pisarna:
+ *   post:
+ *     summary: Dodaj prihod zaposlenega v pisarno
+ *     tags: [Prihodi]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idZaposlenega:
+ *                 type: string
+ *               prihod:
+ *                 type: string
+ *               lokacija:
+ *                 type: string
+ *                 default: Pisarna
+ *     responses:
+ *       201:
+ *         description: Uspešno dodan prihod
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Prihod'
+ *       400:
+ *         description: Napačni podatki
+ *       500:
+ *         description: Napaka pri shranjevanju podatkov
+ */
 app.post('/prihod/pisarna', async (req, res) => {
   const { idZaposlenega, prihod, lokacija } = req.body;
 
@@ -167,6 +363,38 @@ app.post('/prihod/pisarna', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /prihod/odDoma:
+ *   post:
+ *     summary: Dodaj prihod zaposlenega od doma
+ *     tags: [Prihodi]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idZaposlenega:
+ *                 type: string
+ *               prihod:
+ *                 type: string
+ *               lokacija:
+ *                 type: string
+ *                 default: Od doma
+ *     responses:
+ *       201:
+ *         description: Uspešno dodan prihod
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Prihod'
+ *       400:
+ *         description: Napačni podatki
+ *       500:
+ *         description: Napaka pri shranjevanju podatkov
+ */
 app.post('/prihod/odDoma', async (req, res) => {
   const { idZaposlenega, prihod, lokacija } = req.body;
 
@@ -200,7 +428,39 @@ app.post('/prihod/odDoma', async (req, res) => {
   }
 });
 
-// PUT 
+/**
+ * @swagger
+ * /malicazacetek/{datum}/{malicaZacetek}:
+ *   put:
+ *     summary: Posodobi čas začetka malice za določen datum
+ *     tags: [Prihodi]
+ *     parameters:
+ *       - in: path
+ *         name: datum
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Datum (YYYY-MM-DD)
+ *       - in: path
+ *         name: malicaZacetek
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Čas začetka malice
+ *     responses:
+ *       200:
+ *         description: Posodobljeni podatki o prihodu
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Prihod'
+ *       400:
+ *         description: Napačni podatki
+ *       404:
+ *         description: Podatek ni bil najden
+ *       500:
+ *         description: Napaka pri posodabljanju
+ */
 app.put('/malicazacetek/:datum/:malicaZacetek', async (req, res) => {
   const { datum, malicaZacetek } = req.params;
 
@@ -224,6 +484,39 @@ app.put('/malicazacetek/:datum/:malicaZacetek', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /malicakonec/{datum}/{malicaKonec}:
+ *   put:
+ *     summary: Posodobi čas konca malice za določen datum
+ *     tags: [Prihodi]
+ *     parameters:
+ *       - in: path
+ *         name: datum
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Datum (YYYY-MM-DD)
+ *       - in: path
+ *         name: malicaKonec
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Čas konca malice (HH:mm)
+ *     responses:
+ *       200:
+ *         description: Posodobljeni podatki o prihodu z novim časom konca malice
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Prihod'
+ *       400:
+ *         description: Napačni podatki (manjka čas konca malice)
+ *       404:
+ *         description: Prihod za določen datum ni bil najden
+ *       500:
+ *         description: Napaka pri posodabljanju časa konca malice
+ */
 app.put('/malicakonec/:datum/:malicaKonec', async (req, res) => {
   const { datum, malicaKonec } = req.params;
 
@@ -247,6 +540,39 @@ app.put('/malicakonec/:datum/:malicaKonec', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /odhod/{datum}/{odhod}:
+ *   put:
+ *     summary: Posodobi čas odhoda za določen datum
+ *     tags: [Prihodi]
+ *     parameters:
+ *       - in: path
+ *         name: datum
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Datum (YYYY-MM-DD)
+ *       - in: path
+ *         name: odhod
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Čas odhoda (HH:mm)
+ *     responses:
+ *       200:
+ *         description: Posodobljeni podatki o prihodu z novim časom odhoda
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Prihod'
+ *       400:
+ *         description: Napačni podatki (manjka čas odhoda)
+ *       404:
+ *         description: Prihod za določen datum ni bil najden
+ *       500:
+ *         description: Napaka pri posodabljanju časa odhoda
+ */
 app.put('/odhod/:datum/:odhod', async (req, res) => {
   const { datum, odhod } = req.params;
 
@@ -270,7 +596,33 @@ app.put('/odhod/:datum/:odhod', async (req, res) => {
   }
 });
 
-// DELETE 
+/**
+ * @swagger
+ * /prihod/{id}/{datum}:
+ *   delete:
+ *     summary: Izbriši prihod za določenega zaposlenega na določen datum
+ *     tags: [Prihodi]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID zaposlenega
+ *       - in: path
+ *         name: datum
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Datum (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: Uspešno izbrisani podatki
+ *       404:
+ *         description: Ni podatkov za izbris
+ *       500:
+ *         description: Napaka pri brisanju
+ */
 app.delete('/prihod/:id/:datum', async (req, res) => {
   const { id, datum } = req.params;
 
@@ -288,6 +640,27 @@ app.delete('/prihod/:id/:datum', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /prihod/{id}:
+ *   delete:
+ *     summary: Izbriši vse prihode za določenega zaposlenega
+ *     tags: [Prihodi]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID zaposlenega
+ *     responses:
+ *       200:
+ *         description: Uspešno izbrisani vsi prihodi
+ *       404:
+ *         description: Ni podatkov za izbris
+ *       500:
+ *         description: Napaka pri brisanju
+ */
 app.delete('/prihod/:id', async (req, res) => {
   const { id } = req.params; 
 
