@@ -3,12 +3,15 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require("axios");
+const { swaggerUi, swaggerDocs } = require('./swagger');
 
 const app = express();
 const port = 5003;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Connect to MongoDB Atlas
 mongoose.connect("mongodb+srv://mongo_user_1:geslo123@soa.feeob.mongodb.net/soa", {
@@ -38,6 +41,35 @@ const getMonthName = (monthIndex) => {
   return months[monthIndex];
 };
 
+/**
+ * @swagger
+ * /statistics:
+ *   get:
+ *     summary: Pridobi splošno statistiko dopustov
+ *     tags: [Statistics]
+ *     responses:
+ *       200:
+ *         description: Uspešna pridobitev statistike
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalLeaves:
+ *                   type: integer
+ *                   description: Skupno število dopustov
+ *                 approvedLeaves:
+ *                   type: integer
+ *                   description: Število odobrenih dopustov
+ *                 rejectedLeaves:
+ *                   type: integer
+ *                   description: Število zavrnjenih dopustov
+ *                 averageDuration:
+ *                   type: number
+ *                   description: Povprečno trajanje dopustov v dnevih
+ *       500:
+ *         description: Napaka pri pridobivanju statistike
+ */
 app.get('/statistics', async (req, res) => {
   try {
     const dopusti = await Dopust.find();
@@ -64,6 +96,34 @@ app.get('/statistics', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /statistics/monthly:
+ *   get:
+ *     summary: Pridobi mesečno statistiko dopustov
+ *     tags: [Statistics]
+ *     responses:
+ *       200:
+ *         description: Uspešna pridobitev mesečne statistike
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties:
+ *                 type: object
+ *                 properties:
+ *                   total:
+ *                     type: integer
+ *                     description: Skupno število dopustov v mesecu
+ *                   approved:
+ *                     type: integer
+ *                     description: Število odobrenih dopustov v mesecu
+ *                   rejected:
+ *                     type: integer
+ *                     description: Število zavrnjenih dopustov v mesecu
+ *       500:
+ *         description: Napaka pri pridobivanju statistike
+ */
 app.get('/statistics/monthly', async (req, res) => {
   try {
     const dopusti = await Dopust.find();

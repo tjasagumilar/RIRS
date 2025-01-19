@@ -1,6 +1,7 @@
 const express = require('express');
 const twilio = require('twilio');
 const bodyParser = require('body-parser');
+const { swaggerUi, swaggerDocs } = require('./swagger');
 
 require('dotenv').config(); 
 
@@ -13,7 +14,64 @@ const client = new twilio(accountSid, authToken);
 const app = express();
 
 app.use(bodyParser.json());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+/**
+ * @swagger
+ * /send-sms:
+ *   post:
+ *     summary: Pošlji SMS sporočilo
+ *     tags: [SMS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               phoneNumber:
+ *                 type: string
+ *                 description: Telefonska številka prejemnika (v mednarodnem formatu)
+ *               message:
+ *                 type: string
+ *                 description: Vsebina SMS sporočila
+ *     responses:
+ *       200:
+ *         description: SMS uspešno poslan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 messageSid:
+ *                   type: string
+ *                   description: Enolična identifikacija poslanega sporočila
+ *                 message:
+ *                   type: string
+ *                   description: Informativno sporočilo
+ *       400:
+ *         description: Napačna zahteva (manjkajo podatki)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Napaka pri pošiljanju SMS
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: string
+ */
 app.post('/send-sms', async (req, res) => {
   const { phoneNumber, message } = req.body;
 

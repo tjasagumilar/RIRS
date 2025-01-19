@@ -2,12 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { swaggerSpec, swaggerUi } = require('./swagger');
 
 const app = express();
 const port = 5005;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 mongoose.connect("mongodb+srv://dbUser:dbUser123@cluster0.6aear.mongodb.net/Offices", {
   useNewUrlParser: true,
@@ -33,7 +36,32 @@ function serializeOffice(office) {
   };
 }
 
-// GET: Pridobi vse pisarne
+/**
+ * @swagger
+ * /offices:
+ *   get:
+ *     summary: Pridobi vse pisarne
+ *     tags: [Offices]
+ *     responses:
+ *       200:
+ *         description: Seznam pisarn
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     description: ID pisarne
+ *                   name:
+ *                     type: string
+ *                     description: Ime pisarne
+ *                   address:
+ *                     type: string
+ *                     description: Naslov pisarne
+ */
 app.get('/offices', async (req, res) => {
   try {
     const offices = await Office.find();
@@ -44,7 +72,55 @@ app.get('/offices', async (req, res) => {
   }
 });
 
-// GET: Pridobi podrobnosti posamezne pisarne
+/**
+ * @swagger
+ * /offices/{id}:
+ *   get:
+ *     summary: Pridobi podrobnosti posamezne pisarne
+ *     tags: [Offices]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID pisarne za pridobitev podrobnosti
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Podrobnosti pisarne
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   description: ID pisarne
+ *                 name:
+ *                   type: string
+ *                   description: Ime pisarne
+ *                 address:
+ *                   type: string
+ *                   description: Naslov pisarne
+ *       404:
+ *         description: Pisarna ni najdena
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Napaka na strežniku
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 app.get('/offices/:id', async (req, res) => {
   try {
     const office = await Office.findById(req.params.id);
@@ -59,7 +135,40 @@ app.get('/offices/:id', async (req, res) => {
   }
 });
 
-// POST: Dodaj novo pisarno
+/**
+ * @swagger
+ * /offices:
+ *   post:
+ *     summary: Dodaj novo pisarno
+ *     tags: [Offices]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Ime pisarne
+ *               address:
+ *                 type: string
+ *                 description: Naslov pisarne
+ *     responses:
+ *       201:
+ *         description: Pisarna uspešno dodana
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 address:
+ *                   type: string
+ */
 app.post('/offices', async (req, res) => {
   const { name, address } = req.body;
 
@@ -77,7 +186,61 @@ app.post('/offices', async (req, res) => {
   }
 });
 
-// PUT: Posodobi podatke pisarne
+/**
+ * @swagger
+ * /offices/{id}:
+ *   put:
+ *     summary: Posodobi podatke pisarne
+ *     tags: [Offices]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID pisarne za posodobitev
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Novo ime pisarne
+ *               address:
+ *                 type: string
+ *                 description: Nov naslov pisarne
+ *     responses:
+ *       200:
+ *         description: Pisarna uspešno posodobljena
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Pisarna ni najdena
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Napaka na strežniku
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 app.put('/offices/:id', async (req, res) => {
   const officeId = req.params.id;
   const { name, address } = req.body;
@@ -99,7 +262,48 @@ app.put('/offices/:id', async (req, res) => {
   }
 });
 
-// DELETE: Izbriši pisarno
+/**
+ * @swagger
+ * /offices/{id}:
+ *   delete:
+ *     summary: Izbriši pisarno
+ *     tags: [Offices]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID pisarne za brisanje
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Pisarna uspešno izbrisana
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Pisarna ni najdena
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Napaka na strežniku
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
 app.delete('/offices/:id', async (req, res) => {
   const officeId = req.params.id;
 
@@ -115,6 +319,7 @@ app.delete('/offices/:id', async (req, res) => {
     res.status(500).json({ error: "Error deleting office" });
   }
 });
+
 
 // Zaženi strežnik
 app.listen(port, () => {
