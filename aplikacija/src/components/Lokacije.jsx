@@ -62,6 +62,10 @@ const Lokacije = ({ onEdit }) => {
     navigate("/lokacijeAdd")
   };
 
+  const handleViewLogs = () => {
+    navigate("/dnevnik"); 
+  };
+
   return (
     <Container maxWidth="lg" style={{ marginTop: "30px" }}>
       <Typography variant="h4" style={{ marginBottom: "20px" }}>
@@ -76,6 +80,14 @@ const Lokacije = ({ onEdit }) => {
           onClick={handleAdd}
         >
           Dodaj pisarno
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          style={{ marginLeft: "10px" }}
+          onClick={handleViewLogs}
+        >
+          Spremembe
         </Button>
       </Grid>
 
