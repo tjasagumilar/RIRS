@@ -1,0 +1,144 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type FinancialReport {
+  Description: String
+  Expenses: Int
+  NetProfit: Int
+  Notes: String
+  Revenue: Int
+  month: String!
+}
+
+type FinancialReportConnection {
+  items: [FinancialReport]
+  nextToken: String
+}
+
+type Mutation {
+  createFinancialReport(input: CreateFinancialReportInput!): FinancialReport
+  deleteFinancialReport(input: DeleteFinancialReportInput!): FinancialReport
+  updateFinancialReport(input: UpdateFinancialReportInput!): FinancialReport
+}
+
+type Query {
+  getFinancialReport(month: String!): FinancialReport
+  listFinancialReports(filter: TableFinancialReportFilterInput, limit: Int, nextToken: String): FinancialReportConnection
+}
+
+type Subscription {
+  onCreateFinancialReport(Description: String, Expenses: Int, NetProfit: Int, Revenue: Int, month: String): FinancialReport @aws_subscribe(mutations : ["createFinancialReport"])
+  onDeleteFinancialReport(Description: String, Expenses: Int, NetProfit: Int, Revenue: Int, month: String): FinancialReport @aws_subscribe(mutations : ["deleteFinancialReport"])
+  onUpdateFinancialReport(Description: String, Expenses: Int, NetProfit: Int, Revenue: Int, month: String): FinancialReport @aws_subscribe(mutations : ["updateFinancialReport"])
+}
+
+input CreateFinancialReportInput {
+  Description: String
+  Expenses: Int
+  NetProfit: Int
+  Notes: String
+  Revenue: Int
+  month: String!
+}
+
+input DeleteFinancialReportInput {
+  month: String!
+}
+
+input ModelSizeInput {
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+input TableBooleanFilterInput {
+  attributeExists: Boolean
+  eq: Boolean
+  ne: Boolean
+}
+
+input TableFinancialReportFilterInput {
+  Description: TableStringFilterInput
+  Expenses: TableIntFilterInput
+  NetProfit: TableIntFilterInput
+  Notes: TableStringFilterInput
+  Revenue: TableIntFilterInput
+  month: TableStringFilterInput
+}
+
+input TableFloatFilterInput {
+  attributeExists: Boolean
+  between: [Float]
+  eq: Float
+  ge: Float
+  gt: Float
+  le: Float
+  lt: Float
+  ne: Float
+}
+
+input TableIDFilterInput {
+  attributeExists: Boolean
+  beginsWith: ID
+  between: [ID]
+  contains: ID
+  eq: ID
+  ge: ID
+  gt: ID
+  le: ID
+  lt: ID
+  ne: ID
+  notContains: ID
+  size: ModelSizeInput
+}
+
+input TableIntFilterInput {
+  attributeExists: Boolean
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+input TableStringFilterInput {
+  attributeExists: Boolean
+  beginsWith: String
+  between: [String]
+  contains: String
+  eq: String
+  ge: String
+  gt: String
+  le: String
+  lt: String
+  ne: String
+  notContains: String
+  size: ModelSizeInput
+}
+
+input UpdateFinancialReportInput {
+  Description: String
+  Expenses: Int
+  NetProfit: Int
+  Notes: String
+  Revenue: Int
+  month: String!
+}
+
+type MonthlyRevenue {
+  month: String!
+  revenue: Int!
+}
+
+extend type Query {
+  getMonthlyRevenue: [MonthlyRevenue]
+}

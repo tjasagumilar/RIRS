@@ -19,6 +19,7 @@ import LokacijeEdit from "./components/LokacijeEdit";
 import LokacijeAdd from "./components/LokacijeAdd";
 import Lokacije from "./components/Lokacije";
 import TasksAndEvents from "./components/TasksAndEvents";
+import FinancialReport from "./components/FinancialReport";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -137,6 +138,7 @@ const AppContent = ({ user, selectedEntry, handleLogout, handleEdit }) => {
         />
         <Route path="/projects" element={<Projects />} />
         <Route path="/calendar" element={<TasksAndEvents />} />
+        <Route path="/report" element={<FinancialReport />} />
         <Route path="/lokacijeEdit" element={<LokacijeEdit entry={selectedEntry} />} />
         <Route path="/lokacijeAdd" element={<LokacijeAdd />} />
         <Route path="/editEntry" element={<EditEntryForm entry={selectedEntry} />} />
