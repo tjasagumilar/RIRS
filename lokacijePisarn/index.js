@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { swaggerSpec, swaggerUi } = require('./swagger');
+const axios = require('axios'); 
 
 const app = express();
 const port = 5005;
@@ -34,6 +35,21 @@ function serializeOffice(office) {
     name: office.name,
     address: office.address,
   };
+}
+
+// Funkcija za logiranje sprememb (pošlje POST zahtevek mikroservisu za logiranje)
+async function logChange(action, officeData) {
+  try {
+    await axios.post('http://localhost:5006/log', {
+      action, 
+      officeId: officeData._id,
+      officeName: officeData.name,
+      officeAddress: officeData.address
+    });
+    console.log(`Sprememba logirana: ${action}`);
+  } catch (err) {
+    console.error('Napaka pri pošiljanju loga', err);
+  }
 }
 
 /**
@@ -179,6 +195,10 @@ app.post('/offices', async (req, res) => {
   try {
     const newOffice = new Office({ name, address });
     const savedOffice = await newOffice.save();
+
+    // Logiraj spremembo (Dodajanje nove pisarne)
+    await logChange('create', savedOffice);
+
     res.status(201).json(serializeOffice(savedOffice));
   } catch (err) {
     console.error("Error saving office:", err);
@@ -255,6 +275,10 @@ app.put('/offices/:id', async (req, res) => {
     office.address = address || office.address;
 
     await office.save();
+
+    // Logiraj spremembo (Posodabljanje pisarne)
+    await logChange('update', office);
+
     res.json({ message: "Office updated successfully" });
   } catch (err) {
     console.error("Error updating office:", err);
@@ -312,6 +336,9 @@ app.delete('/offices/:id', async (req, res) => {
     if (!deletedOffice) {
       return res.status(404).json({ error: "Office not found" });
     }
+
+    // Logiraj spremembo (Brisanje pisarne)
+    await logChange('delete', deletedOffice);
 
     res.json({ message: "Office deleted successfully" });
   } catch (err) {
